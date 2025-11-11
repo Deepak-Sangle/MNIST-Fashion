@@ -32,7 +32,7 @@ You will have to define a model architecture and a training procedure for this a
 
 You can train your model by running the following command from the project root directory:
 ```bash
-uv run -m submission.train_fashion_model
+uv run -m submission.fashon_training
 ```
 You may wish to modify this training call or call it from a separate script or notebook to experiment with different hyperparameters, architectures, etc.
 
