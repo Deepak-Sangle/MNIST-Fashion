@@ -87,9 +87,13 @@ Before submitting, it is strongly recommended to test your submission using Dock
    ```bash
     docker build -t test .
     ```
-4. Run the Docker container with no network access:
+4. Run the Docker container with **no** network access (this is to check your training loop doesn't rely on internet access):
    ```bash
     docker run --rm --network=none test
+   ```
+4. Run the Docker container **with** network access:
+   ```bash
+    docker run test
    ```
 If all tests pass, your submission is ready to be uploaded to the course portal on Canvas.
 

@@ -45,13 +45,16 @@ def evaluate_model(model, test_loader, device):
 def main():
     # Check STUDENT_ID is set
     if STUDENT_ID == "your_student_id_here":
-        print("STUDENT_ID not set! Please set your STUDENT_ID in submission/STUDENT_ID.py")
+        print(f"STUDENT_ID: UNKNOWN")
+        print(f"ERROR: STUDENT ID not set, please set it in submission/STUDENT_ID.py first.")
         return
     if not os.path.exists('submission/model_weights.pth'):
-        print("I couldn't find the model weights at submission/model_weights.pth! Did you forget to train your model first?")
+        print(f"STUDENT_ID: {STUDENT_ID}")
+        print(f"ERROR: I couldn't find the model weights at submission/model_weights.pth! Did you forget to train your model first?")
         return
     if os.path.getsize('submission/model_weights.pth') == 0:
-        print("The model weights file at submission/model_weights.pth is empty! Check that your model was trained and saved correctly.")
+        print(f"STUDENT_ID: {STUDENT_ID}")
+        print(f"ERROR: The model weights file at submission/model_weights.pth is empty. Check that your model was trained and saved correctly.")
         return
     
     # Device configuration
@@ -134,12 +137,36 @@ def main():
     # NOTE: during marking, dataset and dataloader may change! 
     # The results you get here may not be the same as during marking!
     # However the format will be the same - if this works, so will the marking setup.
-    test_dataset = torchvision.datasets.FashionMNIST(
-        root='./data',
-        train=False,
-        download=True,
-        transform=transform
-    )
+    try:
+        test_dataset = torchvision.datasets.FashionMNIST(
+            root='./data',
+            train=False,
+            download=True,
+            transform=transform
+        )
+    except OSError as e:
+        print(f"STUDENT_ID: {STUDENT_ID}")
+        print(f"PARAMETERS: {num_params}")
+        print(f"TRAINING_CHECK: PASSED")
+        print(f"ERROR: Failed to download Fashion-MNIST test dataset: {e}")
+        print(f"       Have you built Docker as read-only?")
+        return
+    except Exception as e:
+        error_msg = str(e).lower()
+        if any(keyword in error_msg for keyword in ['read-only', 'network', 'connection', 'download', 'name resolution']):
+            print(f"STUDENT_ID: {STUDENT_ID}")
+            print(f"PARAMETERS: {num_params}")
+            print(f"TRAINING_CHECK: PASSED")
+            print(f"Well done! Your model passed the training checks.")
+            print(f"   To check that inference works, we need to give Docker network access to download the test dataset.")
+            print(f"   Please run this again with network access:")
+            print(f"       docker run test")
+            return
+        else:
+            print(f"STUDENT_ID: {STUDENT_ID}")
+            print(f"PARAMETERS: {num_params}")
+            print(f"TRAINING_CHECK: PASSED")
+            raise
     
     # Create data loader
     test_loader = torch.utils.data.DataLoader(
