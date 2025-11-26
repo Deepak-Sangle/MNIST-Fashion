@@ -19,6 +19,10 @@ import matplotlib.pyplot as plt
 from submission import engine
 from submission.fashion_model import Net
 
+# Global variable to expose the most recent best validation accuracy from train_fashion_model
+# I need to introduce this global variable because as per rules I cannot change the return value of train_fashion_model() function
+_LAST_TRAIN_BEST_VAL_ACC: float | None = None
+
 def get_device(USE_GPU=True):
     if USE_GPU and torch.cuda.is_available():
         device = torch.device('cuda')
@@ -137,6 +141,8 @@ def train_fashion_model(fashion_mnist,
         state_dict: Model's state dictionary (weights)
     """
 
+    global _LAST_TRAIN_BEST_VAL_ACC
+
     # Optionally use GPU if available
     device = get_device(USE_GPU)
 
@@ -242,7 +248,8 @@ def train_fashion_model(fashion_mnist,
             [train_size, val_size],
             generator=torch.Generator().manual_seed(42),
         )
-        best_model_state, _ = _train_on_split(train_data, val_data)
+        best_model_state, best_val_acc = _train_on_split(train_data, val_data)
+        _LAST_TRAIN_BEST_VAL_ACC = float(best_val_acc)
         return best_model_state
 
     # Standard K-fold cross-validation (k_folds >= 2)
@@ -275,6 +282,9 @@ def train_fashion_model(fashion_mnist,
             best_overall_accuracy = fold_best_acc
             best_overall_state = fold_state
     
+    # Record overall best validation accuracy for external use (e.g. hyperparameter search)
+    _LAST_TRAIN_BEST_VAL_ACC = float(best_overall_accuracy)
+
     # Create and save K-fold plots (per-fold curves and bar chart)
     _save_kfold_plots(
         k_folds=k_folds,
@@ -387,8 +397,8 @@ def main():
               f"Weight decay: {params['weight_decay']}, "
               f"Epochs: {params['n_epochs']}")
         
-        # Train with these hyperparameters
-        weights = train_fashion_model(
+        # Train with these hyperparameters (K-fold inside train_fashion_model)
+        _ = train_fashion_model(
             fashion_mnist,
             n_epochs=params['n_epochs'],
             batch_size=params['batch_size'],
@@ -397,38 +407,13 @@ def main():
             USE_GPU=True,
             k_folds=k_folds,
         )
-        
-        # Evaluate on validation set to select best hyperparameters
-        # Create a temporary model to evaluate
-        model = Net()
-        model.load_state_dict(weights)
-        model.eval()
-        
-        # Create validation split for evaluation
-        train_size = int(0.8 * len(fashion_mnist))
-        val_size = len(fashion_mnist) - train_size
-        _, val_data = torch.utils.data.random_split(
-            fashion_mnist, 
-            [train_size, val_size],
-            generator=torch.Generator().manual_seed(42)
-        )
-        
-        val_loader = DataLoader(
-            val_data,
-            batch_size=params['batch_size'],
-            shuffle=False,
-            num_workers=0
-        )
-        
-        # Evaluate
-        device = get_device(True)
-        criterion = torch.nn.CrossEntropyLoss()
-        _, val_accuracy = engine.eval(model, val_loader, criterion, device)
-        
-        print(f"Validation Accuracy: {val_accuracy:.4f}")
+
+        # Use the best validation accuracy recorded during K-fold training
+        val_accuracy = _LAST_TRAIN_BEST_VAL_ACC if _LAST_TRAIN_BEST_VAL_ACC is not None else 0.0
+        print(f"K-fold best validation Accuracy: {val_accuracy:.4f}")
         
         if val_accuracy >= best_accuracy:
-            best_accuracy = val_accuracy
+            best_accuracy = float(val_accuracy)
             best_hyperparams = params
             print(f"  -> New best hyperparameters!")
 
