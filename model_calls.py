@@ -44,7 +44,7 @@ def evaluate_model(model, test_loader, device):
 
 def main():
     # Check STUDENT_ID is set
-    if STUDENT_ID == "14263708":
+    if STUDENT_ID != "14263708":
         print(f"STUDENT_ID: UNKNOWN")
         print(f"ERROR: STUDENT ID not set, please set it in submission/STUDENT_ID.py first.")
         return

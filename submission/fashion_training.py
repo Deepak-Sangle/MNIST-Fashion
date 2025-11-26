@@ -10,6 +10,7 @@ import numpy as np
 import torch
 import torchvision
 from torch.utils.data import DataLoader
+from sklearn.model_selection import KFold
 
 from submission import engine
 from submission.fashion_model import Net
@@ -27,12 +28,11 @@ def train_fashion_model(fashion_mnist,
                         batch_size=128,
                         learning_rate=0.001,
                         USE_GPU=True,
-                        weight_decay=1e-4):
+                        weight_decay=1e-4,
+                        k_folds=5):
     """
-    Train the Fashion-MNIST model with proper train/validation split.
+    Train the Fashion-MNIST model using K-fold cross-validation.
     
-    You can modify the contents of this function as needed, but DO NOT CHANGE the arguments,
-    the function name, or return values, as this will be called during marking!
     (You can change the default values or add additional keyword arguments if needed.)
     
     Args:
@@ -42,6 +42,7 @@ def train_fashion_model(fashion_mnist,
         learning_rate: Learning rate for optimizer
         USE_GPU: Whether to use GPU if available
         weight_decay: L2 regularization weight decay
+        k_folds: Number of folds for cross-validation (minimum 2)
     
     Returns:
         state_dict: Model's state dictionary (weights)
@@ -50,79 +51,116 @@ def train_fashion_model(fashion_mnist,
     # Optionally use GPU if available
     device = get_device(USE_GPU)
 
-    # Create train-val split (80-20 split)
-    # Using fixed random seed for reproducibility
-    train_size = int(0.8 * len(fashion_mnist))
-    val_size = len(fashion_mnist) - train_size
-    train_data, val_data = torch.utils.data.random_split(
-        fashion_mnist, 
-        [train_size, val_size],
-        generator=torch.Generator().manual_seed(42)  # Fixed seed for reproducibility
-    )
+    def _train_on_split(train_dataset, val_dataset):
+        """
+        Helper to train a model on a single train/validation split.
+        
+        Returns:
+            best_state_dict, best_val_accuracy
+        """
+        # Create data loaders
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+        )
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+        )
 
-    # Create data loaders
-    train_loader = DataLoader(
-        train_data,
-        batch_size=batch_size,
-        shuffle=True,
-    )
-    val_loader = DataLoader(
-        val_data,
-        batch_size=batch_size,
-        shuffle=False,
-    )
+        # Initialize model, loss function, and optimizer
+        model = Net()
+        model.to(device)
+        criterion = torch.nn.CrossEntropyLoss()
+        criterion.to(device)
+        
+        # Use Adam optimizer with weight decay for regularization
+        optimizer = torch.optim.Adam(
+            model.parameters(), 
+            lr=learning_rate,
+            weight_decay=weight_decay
+        )
+        
+        # Learning rate scheduler for better convergence
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer, 
+            mode='min', 
+            factor=0.5, 
+            patience=5
+        )
 
-    # Initialize model, loss function, and optimizer
-    model = Net()
-    model.to(device)
-    criterion = torch.nn.CrossEntropyLoss()
-    criterion.to(device)
-    
-    # Use Adam optimizer with weight decay for regularization
-    optimizer = torch.optim.Adam(
-        model.parameters(), 
-        lr=learning_rate,
-        weight_decay=weight_decay
-    )
-    
-    # Learning rate scheduler for better convergence
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, 
-        mode='min', 
-        factor=0.5, 
-        patience=5
-    )
+        # Training loop
+        best_val_accuracy = 0.0
+        best_model_state = None
+        
+        for epoch in range(n_epochs):
+            # Training phase
+            train_loss = engine.train(model, train_loader, criterion, optimizer, device)
+            
+            # Validation phase
+            val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
+            
+            # Update learning rate based on validation loss
+            scheduler.step(val_loss)
+            
+            print(f"Epoch [{epoch + 1}/{n_epochs}], "
+                  f"Train Loss: {train_loss:.4f}, "
+                  f"Val Loss: {val_loss:.4f}, "
+                  f"Val Accuracy: {val_accuracy:.4f}")
+            
+            # Save best model based on validation accuracy
+            if val_accuracy > best_val_accuracy:
+                best_val_accuracy = val_accuracy
+                best_model_state = model.state_dict().copy()
+                print(f"  -> New best validation accuracy: {best_val_accuracy:.4f}")
+        
+        # Fallback (should not normally happen)
+        if best_val_accuracy == 0.0 and best_model_state is None:
+            best_model_state = model.state_dict()
+        return best_model_state, best_val_accuracy
 
-    # Training loop
-    best_val_accuracy = 0.0
-    best_model_state = None
+    # K-fold cross-validation
+    num_samples = len(fashion_mnist)
+    k_folds = max(2, min(int(k_folds), num_samples))
+    indices = np.arange(num_samples)
     
-    for epoch in range(n_epochs):
-        # Training phase
-        train_loss = engine.train(model, train_loader, criterion, optimizer, device)
-        
-        # Validation phase
-        val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
-        
-        # Update learning rate based on validation loss
-        scheduler.step(val_loss)
-        
-        print(f"Epoch [{epoch + 1}/{n_epochs}], "
-              f"Train Loss: {train_loss:.4f}, "
-              f"Val Loss: {val_loss:.4f}, "
-              f"Val Accuracy: {val_accuracy:.4f}")
-        
-        # Save best model based on validation accuracy
-        if val_accuracy > best_val_accuracy:
-            best_val_accuracy = val_accuracy
-            best_model_state = model.state_dict().copy()
-            print(f"  -> New best validation accuracy: {best_val_accuracy:.4f}")
+    kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
+
+    best_overall_accuracy = 0.0
+    best_overall_state = None
     
-    # Return the best model's state_dict (weights) - DO NOT CHANGE THIS
-    if best_model_state is not None:
-        return best_model_state
+    for fold_idx, (train_indices, val_indices) in enumerate(kf.split(indices)):
+        
+        print(f"\nStarting fold {fold_idx + 1}/{k_folds} "
+              f"(train={len(train_indices)}, val={len(val_indices)})")
+        
+        train_subset = torch.utils.data.Subset(fashion_mnist, train_indices.tolist())
+        val_subset = torch.utils.data.Subset(fashion_mnist, val_indices.tolist())
+        
+        fold_state, fold_best_acc = _train_on_split(train_subset, val_subset)
+        print(f"Fold {fold_idx + 1}/{k_folds} best validation accuracy: {fold_best_acc:.4f}")
+        
+        if fold_best_acc > best_overall_accuracy:
+            best_overall_accuracy = fold_best_acc
+            best_overall_state = fold_state
+    
+    # Return the best model's state_dict (weights) across folds
+    if best_overall_state is not None:
+        return best_overall_state
     else:
-        return model.state_dict()
+        # Fallback (should not normally happen)
+        # Train once on the full dataset with a dummy 90/10 split
+        train_size = int(0.9 * len(fashion_mnist))
+        val_size = len(fashion_mnist) - train_size
+        train_data, val_data = torch.utils.data.random_split(
+            fashion_mnist, 
+            [train_size, val_size],
+            generator=torch.Generator().manual_seed(123)
+        )
+        best_model_state, _ = _train_on_split(train_data, val_data)
+        return best_model_state
 
 
 def get_transforms(mode='train'):
@@ -138,12 +176,12 @@ def get_transforms(mode='train'):
     if mode == 'train':
         # Training transforms with data augmentation
         tfs = torchvision.transforms.Compose([
+            # Convert to tensor (supports both PIL Images and NumPy arrays)
+            torchvision.transforms.ToTensor(),
             # Random horizontal flip (clothing can face either direction)
             torchvision.transforms.RandomHorizontalFlip(p=0.5),
             # Small random rotation for robustness
             torchvision.transforms.RandomRotation(degrees=5),
-            # Convert to tensor and normalize to [0, 1]
-            torchvision.transforms.ToTensor(),
             # Normalize to have zero mean and unit variance (helps with training stability)
             # Fashion-MNIST pixel values are in [0, 1] after ToTensor, so mean=0.5, std=0.5
             torchvision.transforms.Normalize(mean=[0.5], std=[0.5])
@@ -214,6 +252,8 @@ def main():
     best_accuracy = 0.0
     best_hyperparams = None
     best_weights = None
+    # Number of folds for cross-validation during hyperparameter search/final training
+    k_folds = 5
     
     # Quick hyperparameter search (using smaller number of epochs for speed)
     for i, params in enumerate(hyperparams):
@@ -230,7 +270,8 @@ def main():
             batch_size=params['batch_size'],
             learning_rate=params['learning_rate'],
             weight_decay=params['weight_decay'],
-            USE_GPU=True
+            USE_GPU=True,
+            k_folds=k_folds,
         )
         
         # Evaluate on validation set to select best hyperparameters
@@ -283,7 +324,8 @@ def main():
         batch_size=best_hyperparams['batch_size'],
         learning_rate=best_hyperparams['learning_rate'],
         weight_decay=best_hyperparams['weight_decay'],
-        USE_GPU=True
+        USE_GPU=True,
+        k_folds=k_folds,
     )
     
     # Save model weights

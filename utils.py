@@ -70,6 +70,7 @@ def model_check(model, device, transforms=None):
         return True, None
         
     except Exception as e:
+        
         return False, f"Model check failed: {str(e)}"
     
 
