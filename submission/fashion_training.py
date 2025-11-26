@@ -240,9 +240,10 @@ def main():
     # Hyperparameter search space
     # These values were selected based on common practices and parameter constraints
     hyperparams = [
-        {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 30},
-        {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 30},
-        {'batch_size': 128, 'learning_rate': 0.0005, 'weight_decay': 1e-4, 'n_epochs': 30},
+        {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 8},
+        # This one performs best with no-fold (n_epochs was 30 that time)
+        {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 8},
+        {'batch_size': 128, 'learning_rate': 0.0005, 'weight_decay': 1e-4, 'n_epochs': 8},
     ]
     
     print("\n" + "-" * 60)

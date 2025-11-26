@@ -43,18 +43,20 @@ def evaluate_model(model, test_loader, device):
 
 
 def main():
+    weights_file = 'submission/weights/no-kfold.pth'
+
     # Check STUDENT_ID is set
     if STUDENT_ID != "14263708":
         print(f"STUDENT_ID: UNKNOWN")
         print(f"ERROR: STUDENT ID not set, please set it in submission/STUDENT_ID.py first.")
         return
-    if not os.path.exists('submission/model_weights.pth'):
+    if not os.path.exists(weights_file):
         print(f"STUDENT_ID: {STUDENT_ID}")
-        print(f"ERROR: I couldn't find the model weights at submission/model_weights.pth! Did you forget to train your model first?")
+        print(f"ERROR: I couldn't find the model weights at {weights_file}! Did you forget to train your model first?")
         return
-    if os.path.getsize('submission/model_weights.pth') == 0:
+    if os.path.getsize(weights_file) == 0:
         print(f"STUDENT_ID: {STUDENT_ID}")
-        print(f"ERROR: The model weights file at submission/model_weights.pth is empty. Check that your model was trained and saved correctly.")
+        print(f"ERROR: The model weights file at {weights_file} is empty. Check that your model was trained and saved correctly.")
         return
     
     # Device configuration
@@ -68,7 +70,7 @@ def main():
     
     # Load trained weights
     try:
-        model.load_state_dict(torch.load('submission/model_weights.pth', 
+        model.load_state_dict(torch.load(weights_file, 
                                          weights_only=True, map_location=device))
     except Exception as e:
         print(f"STUDENT_ID: {STUDENT_ID}")
@@ -112,7 +114,7 @@ def main():
         return
     
     # Reload weights after sanity check (in case model state changed)
-    model.load_state_dict(torch.load('submission/model_weights.pth', map_location=device))
+    model.load_state_dict(torch.load(weights_file, map_location=device))
     model.to(device)
 
     # Define evaluation transforms and check validity and determinism
