@@ -65,15 +65,15 @@ def train_fashion_model(fashion_mnist,
             batch_size=batch_size,
             shuffle=True,
             # The training takes a long time, so adding more workers
-            # num_workers=2,
-            # pin_memory=True,
+            num_workers=2,
+            pin_memory=True if device.type == 'cuda' else False,
         )
         val_loader = DataLoader(
             val_dataset,
             batch_size=batch_size,
             shuffle=False,
-            # num_workers=2,
-            # pin_memory=True,
+            num_workers=2,
+            pin_memory=True if device.type == 'cuda' else False,
         )
 
         # Initialize model, loss function, and optimizer
@@ -141,38 +141,21 @@ def train_fashion_model(fashion_mnist,
 
     best_overall_accuracy = 0.0
     best_overall_state = None
-    
-    for fold_idx, (train_indices, val_indices) in enumerate(kf.split(indices)):
-        
-        print(f"\nStarting fold {fold_idx + 1}/{k_folds} "
-              f"(train={len(train_indices)}, val={len(val_indices)})")
-        
-        train_subset = torch.utils.data.Subset(fashion_mnist, train_indices.tolist())
-        val_subset = torch.utils.data.Subset(fashion_mnist, val_indices.tolist())
+    fold_idx = 0
+    for (train_subset, val_subset) in (kf.split(fashion_mnist)):
+        fold_idx += 1
+        print(f"\nStarting fold {fold_idx}/{k_folds} "
+              f"(train={len(train_subset)}, val={len(val_subset)})")
         
         fold_state, fold_best_acc = _train_on_split(train_subset, val_subset)
-        print(f"Fold {fold_idx + 1}/{k_folds} best validation accuracy: {fold_best_acc:.4f}")
+        print(f"Fold {fold_idx}/{k_folds} best validation accuracy: {fold_best_acc:.4f}")
         
-        if fold_best_acc > best_overall_accuracy:
+        if fold_best_acc >= best_overall_accuracy:
             best_overall_accuracy = fold_best_acc
             best_overall_state = fold_state
     
     # Return the best model's state_dict (weights) across folds
-    if best_overall_state is not None:
-        return best_overall_state
-    else:
-        # Fallback (should not normally happen)
-        # Train once on the full dataset with a dummy 90/10 split
-        train_size = int(0.9 * len(fashion_mnist))
-        val_size = len(fashion_mnist) - train_size
-        train_data, val_data = torch.utils.data.random_split(
-            fashion_mnist, 
-            [train_size, val_size],
-            generator=torch.Generator().manual_seed(123)
-        )
-        best_model_state, _ = _train_on_split(train_data, val_data)
-        return best_model_state
-
+    return best_overall_state
 
 def get_transforms(mode='train'):
     """
@@ -326,8 +309,18 @@ def main():
     print(f"Best hyperparameters: {best_hyperparams}")
     print(f"Best validation accuracy: {best_accuracy:.4f}")
     
-    # Use the best weights found during hyperparameter search
-    final_weights = best_weights
+    # Train final model with best hyperparameters for more epochs
+    print("\nTraining final model with best hyperparameters for 50 epochs...")
+    final_epochs = 50
+    final_weights = train_fashion_model(
+        fashion_mnist,
+        n_epochs=final_epochs,
+        batch_size=best_hyperparams['batch_size'],
+        learning_rate=best_hyperparams['learning_rate'],
+        weight_decay=best_hyperparams['weight_decay'],
+        USE_GPU=True,
+        k_folds=k_folds,
+    )
     
     # Save model weights
     model_save_path = os.path.join('submission', 'model_weights.pth')
