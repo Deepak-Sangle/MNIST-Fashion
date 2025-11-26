@@ -47,7 +47,7 @@ def _save_kfold_plots(
     if not fold_epoch_histories and not fold_accuracies:
         return
 
-    plots_dir = os.path.join("submission", "plots")
+    plots_dir = os.path.join("submission", "plots", "1")
     os.makedirs(plots_dir, exist_ok=True)
 
     # 1) Plot validation accuracy vs epoch for each fold
@@ -66,17 +66,17 @@ def _save_kfold_plots(
         plt.savefig(plot_path)
         plt.close()
 
-    # 2) Bar plot of best validation accuracy per fold
+    # 2) Line plot of best validation accuracy per fold
     if fold_accuracies:
         plt.figure(figsize=(6, 4))
         x = np.arange(1, len(fold_accuracies) + 1)
-        plt.bar(x, fold_accuracies)
+        plt.plot(x, fold_accuracies, marker="o")
         plt.xlabel("Fold")
         plt.ylabel("Best Validation Accuracy")
         plt.title("Best Validation Accuracy per Fold")
         plt.xticks(x)
         plt.ylim(0.0, 1.0)
-        plt.grid(axis="y", alpha=0.3)
+        plt.grid(True, alpha=0.3)
         plt.tight_layout()
         plot_path = os.path.join(plots_dir, "best_val_accuracy_per_fold.png")
         plt.savefig(plot_path)
@@ -99,7 +99,7 @@ def _save_hyperparam_config_plot(config_labels, config_val_accuracies) -> None:
     if not config_labels or not config_val_accuracies:
         return
 
-    plots_dir = os.path.join("submission", "plots")
+    plots_dir = os.path.join("submission", "plots", "1")
     os.makedirs(plots_dir, exist_ok=True)
 
     plt.figure(figsize=(7, 4))
