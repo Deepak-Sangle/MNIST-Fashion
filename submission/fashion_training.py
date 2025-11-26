@@ -14,12 +14,19 @@ from torch.utils.data import DataLoader
 from submission import engine
 from submission.fashion_model import Net
 
+def get_device(USE_GPU=True):
+    if USE_GPU and torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
+    print(f"Using device: {device}")
+    return device
 
 def train_fashion_model(fashion_mnist, 
                         n_epochs, 
                         batch_size=128,
                         learning_rate=0.001,
-                        USE_GPU=False,
+                        USE_GPU=True,
                         weight_decay=1e-4):
     """
     Train the Fashion-MNIST model with proper train/validation split.
@@ -39,12 +46,9 @@ def train_fashion_model(fashion_mnist,
     Returns:
         state_dict: Model's state dictionary (weights)
     """
+
     # Optionally use GPU if available
-    if USE_GPU and torch.cuda.is_available():
-        device = torch.device('cuda')
-    else:
-        device = torch.device('cpu')
-    print(f"Using device: {device}")
+    device = get_device(USE_GPU)
 
     # Create train-val split (80-20 split)
     # Using fixed random seed for reproducibility
@@ -61,15 +65,11 @@ def train_fashion_model(fashion_mnist,
         train_data,
         batch_size=batch_size,
         shuffle=True,
-        num_workers=0,  # Set to 0 to avoid issues in Docker
-        pin_memory=True if device.type == 'cuda' else False
     )
     val_loader = DataLoader(
         val_data,
         batch_size=batch_size,
         shuffle=False,
-        num_workers=0,
-        pin_memory=True if device.type == 'cuda' else False
     )
 
     # Initialize model, loss function, and optimizer
@@ -127,12 +127,7 @@ def train_fashion_model(fashion_mnist,
 
 def get_transforms(mode='train'):
     """
-    Define data augmentations and preprocessing transforms.
-    
-    Only standard torchvision transforms are permitted (no lambda functions), please check that 
-    these pass by running model_calls.py before submission. Transforms will be set to .eval()
-    (deterministic) mode during evaluation, so avoid using stochastic transforms like RandomCrop
-    or RandomHorizontalFlip unless they can be set to p=0 during eval.
+    Defines data augmentations and preprocessing transforms.
     
     Args:
         mode: 'train' for training (with augmentation) or 'eval' for evaluation (deterministic)
@@ -196,9 +191,9 @@ def main():
     3. Trains the final model with best hyperparameters
     4. Saves the trained model weights
     """
-    print("=" * 60)
+    print("-" * 60)
     print("Fashion-MNIST Model Training")
-    print("=" * 60)
+    print("-" * 60)
     
     # Load training data
     fashion_mnist = load_training_data()
@@ -212,9 +207,9 @@ def main():
         {'batch_size': 128, 'learning_rate': 0.0005, 'weight_decay': 1e-4, 'n_epochs': 30},
     ]
     
-    print("\n" + "=" * 60)
+    print("\n" + "-" * 60)
     print("Hyperparameter Search")
-    print("=" * 60)
+    print("-" * 60)
     
     best_accuracy = 0.0
     best_hyperparams = None
@@ -235,7 +230,7 @@ def main():
             batch_size=params['batch_size'],
             learning_rate=params['learning_rate'],
             weight_decay=params['weight_decay'],
-            USE_GPU=False
+            USE_GPU=True
         )
         
         # Evaluate on validation set to select best hyperparameters
@@ -261,7 +256,7 @@ def main():
         )
         
         # Evaluate
-        device = torch.device('cpu')
+        device = get_device(True)
         criterion = torch.nn.CrossEntropyLoss()
         val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
         
@@ -288,7 +283,7 @@ def main():
         batch_size=best_hyperparams['batch_size'],
         learning_rate=best_hyperparams['learning_rate'],
         weight_decay=best_hyperparams['weight_decay'],
-        USE_GPU=False
+        USE_GPU=True
     )
     
     # Save model weights
@@ -307,7 +302,6 @@ def main():
     print("\n" + "=" * 60)
     print("Training Complete!")
     print("=" * 60)
-
 
 if __name__ == "__main__":
     main()
