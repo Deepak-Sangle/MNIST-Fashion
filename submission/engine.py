@@ -45,8 +45,9 @@ def eval(model, data_loader, criterion, device):
     model.to(device)
     model.eval()
 
-    targets = []
-    predictions = []
+    # Initialize counters instead of pushing into lists each time
+    correct = 0
+    total = 0
     total_loss = 0.0
 
     with torch.no_grad():
@@ -57,11 +58,11 @@ def eval(model, data_loader, criterion, device):
             loss = criterion(outputs, labels)
             _, predicted = torch.max(outputs.data, 1)
 
-            targets.extend(labels.cpu().numpy())
-            predictions.extend(predicted.cpu().numpy())
+            correct += (predicted == labels).sum().item()
+            total += labels.size(0)
             total_loss += loss.item()
 
-    accuracy = (np.array(predictions) == np.array(targets)).mean()
+    accuracy = correct / total
     avg_loss = total_loss / len(data_loader)
     return avg_loss, accuracy
 

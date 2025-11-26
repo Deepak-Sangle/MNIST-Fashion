@@ -14,7 +14,7 @@ import torch.nn as nn
 import torchvision
 
 import utils
-from submission.fashion_training import get_transforms
+from submission.fashion_training import get_device, get_transforms
 from submission.fashion_model import Net
 from submission.STUDENT_ID import STUDENT_ID
 
@@ -60,7 +60,7 @@ def main():
         return
     
     # Device configuration
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    device = get_device(True)
     
     # Define the model
     model = Net()

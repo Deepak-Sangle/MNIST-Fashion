@@ -6,6 +6,7 @@ To run this training script with uv, ensure you're in the root directory (assign
 and execute: uv run -m submission.fashion_training
 """
 import os
+import time
 import numpy as np
 import torch
 import torchvision
@@ -63,11 +64,16 @@ def train_fashion_model(fashion_mnist,
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
+            # The training takes a long time, so adding more workers
+            # num_workers=2,
+            # pin_memory=True,
         )
         val_loader = DataLoader(
             val_dataset,
             batch_size=batch_size,
             shuffle=False,
+            # num_workers=2,
+            # pin_memory=True,
         )
 
         # Initialize model, loss function, and optimizer
@@ -96,6 +102,8 @@ def train_fashion_model(fashion_mnist,
         best_model_state = None
         
         for epoch in range(n_epochs):
+            epoch_start = time.time()
+
             # Training phase
             train_loss = engine.train(model, train_loader, criterion, optimizer, device)
             
@@ -104,11 +112,14 @@ def train_fashion_model(fashion_mnist,
             
             # Update learning rate based on validation loss
             scheduler.step(val_loss)
+
+            epoch_time = time.time() - epoch_start
             
             print(f"Epoch [{epoch + 1}/{n_epochs}], "
                   f"Train Loss: {train_loss:.4f}, "
                   f"Val Loss: {val_loss:.4f}, "
-                  f"Val Accuracy: {val_accuracy:.4f}")
+                  f"Val Accuracy: {val_accuracy:.4f}, "
+                  f"Time: {epoch_time:.2f}s")
             
             # Save best model based on validation accuracy
             if val_accuracy > best_val_accuracy:
@@ -226,8 +237,7 @@ def main():
     This function:
     1. Loads the Fashion-MNIST dataset
     2. Performs hyperparameter search using validation set
-    3. Trains the final model with best hyperparameters
-    4. Saves the trained model weights
+    3. Saves the best model weights from hyperparameter search
     """
     print("-" * 60)
     print("Fashion-MNIST Model Training")
@@ -300,34 +310,24 @@ def main():
         # Evaluate
         device = get_device(True)
         criterion = torch.nn.CrossEntropyLoss()
-        val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
+        _, val_accuracy = engine.eval(model, val_loader, criterion, device)
         
         print(f"Validation Accuracy: {val_accuracy:.4f}")
         
-        if val_accuracy > best_accuracy:
+        if val_accuracy >= best_accuracy:
             best_accuracy = val_accuracy
             best_hyperparams = params
             best_weights = weights
             print(f"  -> New best hyperparameters!")
     
-    print("\n" + "=" * 60)
-    print("Final Training with Best Hyperparameters")
-    print("=" * 60)
+    print("\n" + "-" * 60)
+    print("Best Hyperparameters Summary")
+    print("-" * 60)
     print(f"Best hyperparameters: {best_hyperparams}")
     print(f"Best validation accuracy: {best_accuracy:.4f}")
     
-    # Train final model with best hyperparameters and more epochs
-    print("\nTraining final model with best hyperparameters...")
-    final_epochs = 50  # More epochs for final training
-    final_weights = train_fashion_model(
-        fashion_mnist,
-        n_epochs=final_epochs,
-        batch_size=best_hyperparams['batch_size'],
-        learning_rate=best_hyperparams['learning_rate'],
-        weight_decay=best_hyperparams['weight_decay'],
-        USE_GPU=True,
-        k_folds=k_folds,
-    )
+    # Use the best weights found during hyperparameter search
+    final_weights = best_weights
     
     # Save model weights
     model_save_path = os.path.join('submission', 'model_weights.pth')
@@ -342,9 +342,9 @@ def main():
     print(f"Parameter limit: 100,000")
     print(f"Within limit: {'Yes' if num_params <= 100000 else 'No'}")
     
-    print("\n" + "=" * 60)
+    print("\n" + "-" * 60)
     print("Training Complete!")
-    print("=" * 60)
+    print("-" * 60)
 
 if __name__ == "__main__":
     main()
