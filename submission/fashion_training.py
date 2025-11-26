@@ -12,6 +12,9 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader
 from sklearn.model_selection import KFold
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
 from submission import engine
 from submission.fashion_model import Net
@@ -19,10 +22,95 @@ from submission.fashion_model import Net
 def get_device(USE_GPU=True):
     if USE_GPU and torch.cuda.is_available():
         device = torch.device('cuda')
+    elif USE_GPU and torch.backends.mps.is_available():
+        device = torch.device('mps')
     else:
         device = torch.device('cpu')
     print(f"Using device: {device}")
     return device
+
+def _save_kfold_plots(
+    k_folds: int,
+    fold_epoch_histories,
+    fold_accuracies,
+    best_overall_accuracy: float,
+) -> None:
+    """
+    Helper to create and save K-fold training plots:
+    1) Validation accuracy vs epoch per fold (line plots)
+    2) Best validation accuracy per fold (bar plot with summary stats)
+    """
+    if not fold_epoch_histories and not fold_accuracies:
+        return
+
+    plots_dir = os.path.join("submission", "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+
+    # 1) Plot validation accuracy vs epoch for each fold
+    for fold_idx, history in fold_epoch_histories:
+        if not history:
+            continue
+        plt.figure(figsize=(6, 4))
+        epochs = range(1, len(history) + 1)
+        plt.plot(epochs, history, marker="o")
+        plt.xlabel("Epoch")
+        plt.ylabel("Validation Accuracy")
+        plt.title(f"Validation Accuracy vs Epoch (Fold {fold_idx})")
+        plt.grid(True, alpha=0.3)
+        plt.tight_layout()
+        plot_path = os.path.join(plots_dir, f"val_accuracy_fold_{fold_idx}.png")
+        plt.savefig(plot_path)
+        plt.close()
+
+    # 2) Bar plot of best validation accuracy per fold
+    if fold_accuracies:
+        plt.figure(figsize=(6, 4))
+        x = np.arange(1, len(fold_accuracies) + 1)
+        plt.bar(x, fold_accuracies)
+        plt.xlabel("Fold")
+        plt.ylabel("Best Validation Accuracy")
+        plt.title("Best Validation Accuracy per Fold")
+        plt.xticks(x)
+        plt.ylim(0.0, 1.0)
+        plt.grid(axis="y", alpha=0.3)
+        plt.tight_layout()
+        plot_path = os.path.join(plots_dir, "best_val_accuracy_per_fold.png")
+        plt.savefig(plot_path)
+        plt.close()
+
+        mean_acc = float(np.mean(fold_accuracies))
+        std_acc = float(np.std(fold_accuracies))
+        print(
+            f"\nK-fold summary over {k_folds} folds: "
+            f"mean val accuracy = {mean_acc:.4f}, "
+            f"std = {std_acc:.4f}, "
+            f"best = {best_overall_accuracy:.4f}"
+        )
+
+
+def _save_hyperparam_config_plot(config_labels, config_val_accuracies) -> None:
+    """
+    Helper to create and save a bar plot of validation accuracy per hyperparameter configuration.
+    """
+    if not config_labels or not config_val_accuracies:
+        return
+
+    plots_dir = os.path.join("submission", "plots")
+    os.makedirs(plots_dir, exist_ok=True)
+
+    plt.figure(figsize=(7, 4))
+    x = np.arange(len(config_labels))
+    plt.bar(x, config_val_accuracies)
+    plt.xticks(x, config_labels, rotation=20, ha="right")
+    plt.ylabel("Validation Accuracy")
+    plt.title("Validation Accuracy per Hyperparameter Configuration")
+    plt.ylim(0.0, 1.0)
+    plt.grid(axis="y", alpha=0.3)
+    plt.tight_layout()
+    plot_path = os.path.join(plots_dir, "val_accuracy_per_hyperparam_config.png")
+    plt.savefig(plot_path)
+    plt.close()
+
 
 def train_fashion_model(fashion_mnist, 
                         n_epochs, 
@@ -52,7 +140,7 @@ def train_fashion_model(fashion_mnist,
     # Optionally use GPU if available
     device = get_device(USE_GPU)
 
-    def _train_on_split(train_dataset, val_dataset):
+    def _train_on_split(train_dataset, val_dataset, val_acc_history=None):
         """
         Helper to train a model on a single train/validation split.
         
@@ -114,12 +202,20 @@ def train_fashion_model(fashion_mnist,
             scheduler.step(val_loss)
 
             epoch_time = time.time() - epoch_start
+            current_lr = optimizer.param_groups[0]["lr"]
+
+            # Store epoch-wise validation accuracy history if requested (for plotting)
+            if val_acc_history is not None:
+                val_acc_history.append(float(val_accuracy))
             
-            print(f"Epoch [{epoch + 1}/{n_epochs}], "
-                  f"Train Loss: {train_loss:.4f}, "
-                  f"Val Loss: {val_loss:.4f}, "
-                  f"Val Accuracy: {val_accuracy:.4f}, "
-                  f"Time: {epoch_time:.2f}s")
+            print(
+                f"Epoch [{epoch + 1}/{n_epochs}], "
+                f"Train Loss: {train_loss:.4f}, "
+                f"Val Loss: {val_loss:.4f}, "
+                f"Val Accuracy: {val_accuracy:.4f}, "
+                f"LR: {current_lr:.6f}, "
+                f"Time: {epoch_time:.2f}s"
+            )
             
             # Save best model based on validation accuracy
             if val_accuracy > best_val_accuracy:
@@ -132,28 +228,61 @@ def train_fashion_model(fashion_mnist,
             best_model_state = model.state_dict()
         return best_model_state, best_val_accuracy
 
-    # K-fold cross-validation
+    # K-fold cross-validation (OR single train/val split if k_folds <= 1)
     num_samples = len(fashion_mnist)
-    k_folds = max(2, min(int(k_folds), num_samples))
-    indices = np.arange(num_samples)
-    
+    k_folds_int = int(k_folds)
+
+    # If k_folds is 1 or less, fall back to a simple train/validation split (no K-fold)
+    # We do this during final training
+    if k_folds_int <= 1:
+        train_size = int(0.8 * num_samples)
+        val_size = num_samples - train_size
+        train_data, val_data = torch.utils.data.random_split(
+            fashion_mnist,
+            [train_size, val_size],
+            generator=torch.Generator().manual_seed(42),
+        )
+        best_model_state, _ = _train_on_split(train_data, val_data)
+        return best_model_state
+
+    # Standard K-fold cross-validation (k_folds >= 2)
+    k_folds = max(2, min(k_folds_int, num_samples))
     kf = KFold(n_splits=k_folds, shuffle=True, random_state=42)
 
     best_overall_accuracy = 0.0
     best_overall_state = None
-    fold_idx = 0
-    for (train_subset, val_subset) in (kf.split(fashion_mnist)):
-        fold_idx += 1
-        print(f"\nStarting fold {fold_idx}/{k_folds} "
-              f"(train={len(train_subset)}, val={len(val_subset)})")
-        
-        fold_state, fold_best_acc = _train_on_split(train_subset, val_subset)
+    fold_accuracies = []
+    fold_epoch_histories = []  # list of (fold_idx, [val_acc_per_epoch])
+
+    for fold_idx, (train_indices, val_indices) in enumerate(kf.split(fashion_mnist), start=1):
+        print(
+            f"\nStarting fold {fold_idx}/{k_folds} "
+            f"(train={len(train_indices)}, val={len(val_indices)})"
+        )
+
+        train_subset = torch.utils.data.Subset(fashion_mnist, train_indices.tolist())
+        val_subset = torch.utils.data.Subset(fashion_mnist, val_indices.tolist())
+
+        # Track epoch-wise validation accuracy for this fold (for plotting)
+        val_acc_history: list[float] = []
+        fold_state, fold_best_acc = _train_on_split(train_subset, val_subset, val_acc_history)
+        fold_epoch_histories.append((fold_idx, val_acc_history))
+
+        fold_accuracies.append(fold_best_acc)
         print(f"Fold {fold_idx}/{k_folds} best validation accuracy: {fold_best_acc:.4f}")
         
         if fold_best_acc >= best_overall_accuracy:
             best_overall_accuracy = fold_best_acc
             best_overall_state = fold_state
     
+    # Create and save K-fold plots (per-fold curves and bar chart)
+    _save_kfold_plots(
+        k_folds=k_folds,
+        fold_epoch_histories=fold_epoch_histories,
+        fold_accuracies=fold_accuracies,
+        best_overall_accuracy=best_overall_accuracy,
+    )
+
     # Return the best model's state_dict (weights) across folds
     return best_overall_state
 
@@ -245,11 +374,12 @@ def main():
     
     best_accuracy = 0.0
     best_hyperparams = None
-    best_weights = None
+    config_labels = []
+    config_val_accuracies = []
     # Number of folds for cross-validation during hyperparameter search/final training
     k_folds = 5
     
-    # Quick hyperparameter search (using smaller number of epochs for speed)
+    # Quick hyperparameter search using k-fold cross-validation
     for i, params in enumerate(hyperparams):
         print(f"\n--- Hyperparameter Set {i+1}/{len(hyperparams)} ---")
         print(f"Batch size: {params['batch_size']}, "
@@ -300,26 +430,35 @@ def main():
         if val_accuracy >= best_accuracy:
             best_accuracy = val_accuracy
             best_hyperparams = params
-            best_weights = weights
             print(f"  -> New best hyperparameters!")
+
+        # Store per-config validation accuracy for plotting
+        label = f"batch={params['batch_size']}, lr={params['learning_rate']}, decay={params['weight_decay']}, epochs={params['n_epochs']}, k_folds={k_folds}"
+        config_labels.append(label)
+        config_val_accuracies.append(float(val_accuracy))
     
     print("\n" + "-" * 60)
     print("Best Hyperparameters Summary")
     print("-" * 60)
     print(f"Best hyperparameters: {best_hyperparams}")
     print(f"Best validation accuracy: {best_accuracy:.4f}")
+
+    # 3) Bar plot: hyperparameter config vs validation accuracy
+    _save_hyperparam_config_plot(config_labels, config_val_accuracies)
     
     # Train final model with best hyperparameters for more epochs
     print("\nTraining final model with best hyperparameters for 50 epochs...")
     final_epochs = 50
     final_weights = train_fashion_model(
+        # Use the full dataset for final training
         fashion_mnist,
         n_epochs=final_epochs,
         batch_size=best_hyperparams['batch_size'],
         learning_rate=best_hyperparams['learning_rate'],
         weight_decay=best_hyperparams['weight_decay'],
         USE_GPU=True,
-        k_folds=k_folds,
+        # No need to use k-fold finally, train with larger epoch and complete dataset
+        k_folds=1,
     )
     
     # Save model weights
