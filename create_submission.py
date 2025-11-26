@@ -21,7 +21,7 @@ except ImportError:
     exit(1)
 
 # Verify student ID is set
-if STUDENT_ID == "your_student_id_here":
+if STUDENT_ID == "14263708":
     print("ERROR: STUDENT_ID not set!")
     print("Please edit submission/STUDENT_ID.py to set your student ID.")
     exit(1)

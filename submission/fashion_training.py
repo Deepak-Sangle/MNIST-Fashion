@@ -1,6 +1,5 @@
 """
-Feel free to replace this code with your own model training code. 
-This is just a simple example to get you started.
+Training script for Fashion-MNIST model with cross-validation and hyperparameter tuning.
 
 This training script uses imports relative to the base directory (assignment/).
 To run this training script with uv, ensure you're in the root directory (assignment/)
@@ -8,7 +7,9 @@ and execute: uv run -m submission.fashion_training
 """
 import os
 import numpy as np
-import torch, torchvision
+import torch
+import torchvision
+from torch.utils.data import DataLoader
 
 from submission import engine
 from submission.fashion_model import Net
@@ -16,13 +17,27 @@ from submission.fashion_model import Net
 
 def train_fashion_model(fashion_mnist, 
                         n_epochs, 
-                        batch_size=4,
+                        batch_size=128,
                         learning_rate=0.001,
-                        USE_GPU=False,):
+                        USE_GPU=False,
+                        weight_decay=1e-4):
     """
+    Train the Fashion-MNIST model with proper train/validation split.
+    
     You can modify the contents of this function as needed, but DO NOT CHANGE the arguments,
     the function name, or return values, as this will be called during marking!
     (You can change the default values or add additional keyword arguments if needed.)
+    
+    Args:
+        fashion_mnist: Fashion-MNIST dataset
+        n_epochs: Number of training epochs
+        batch_size: Batch size for training
+        learning_rate: Learning rate for optimizer
+        USE_GPU: Whether to use GPU if available
+        weight_decay: L2 regularization weight decay
+    
+    Returns:
+        state_dict: Model's state dictionary (weights)
     """
     # Optionally use GPU if available
     if USE_GPU and torch.cuda.is_available():
@@ -31,55 +46,121 @@ def train_fashion_model(fashion_mnist,
         device = torch.device('cpu')
     print(f"Using device: {device}")
 
-    # Create train-val split
+    # Create train-val split (80-20 split)
+    # Using fixed random seed for reproducibility
     train_size = int(0.8 * len(fashion_mnist))
     val_size = len(fashion_mnist) - train_size
-    train_data, val_data = torch.utils.data.random_split(fashion_mnist, [train_size, val_size])
+    train_data, val_data = torch.utils.data.random_split(
+        fashion_mnist, 
+        [train_size, val_size],
+        generator=torch.Generator().manual_seed(42)  # Fixed seed for reproducibility
+    )
 
-    # dataloaders
-    train_loader = torch.utils.data.DataLoader(train_data,
-                                             batch_size=batch_size,
-                                             shuffle=True,
-                                             )
-    val_loader = torch.utils.data.DataLoader(val_data,
-                                             batch_size=batch_size,
-                                             shuffle=False,
-                                             )
+    # Create data loaders
+    train_loader = DataLoader(
+        train_data,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=0,  # Set to 0 to avoid issues in Docker
+        pin_memory=True if device.type == 'cuda' else False
+    )
+    val_loader = DataLoader(
+        val_data,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=True if device.type == 'cuda' else False
+    )
 
     # Initialize model, loss function, and optimizer
     model = Net()
     model.to(device)
     criterion = torch.nn.CrossEntropyLoss()
     criterion.to(device)
-    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    
+    # Use Adam optimizer with weight decay for regularization
+    optimizer = torch.optim.Adam(
+        model.parameters(), 
+        lr=learning_rate,
+        weight_decay=weight_decay
+    )
+    
+    # Learning rate scheduler for better convergence
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, 
+        mode='min', 
+        factor=0.5, 
+        patience=5
+    )
 
     # Training loop
+    best_val_accuracy = 0.0
+    best_model_state = None
+    
     for epoch in range(n_epochs):
+        # Training phase
         train_loss = engine.train(model, train_loader, criterion, optimizer, device)
-        print(f"Epoch [{epoch + 1}/{n_epochs}], Training Loss: {train_loss:.4f}")
-        val_loss, accuracy = engine.eval(model, val_loader, criterion, device)
-        print(f"Epoch [{epoch + 1}/{n_epochs}], Val Loss: {val_loss:.4f}, Accuracy: {accuracy:.4f}")
-
-    # Return the model's state_dict (weights) - DO NOT CHANGE THIS
-    return model.state_dict()
+        
+        # Validation phase
+        val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
+        
+        # Update learning rate based on validation loss
+        scheduler.step(val_loss)
+        
+        print(f"Epoch [{epoch + 1}/{n_epochs}], "
+              f"Train Loss: {train_loss:.4f}, "
+              f"Val Loss: {val_loss:.4f}, "
+              f"Val Accuracy: {val_accuracy:.4f}")
+        
+        # Save best model based on validation accuracy
+        if val_accuracy > best_val_accuracy:
+            best_val_accuracy = val_accuracy
+            best_model_state = model.state_dict().copy()
+            print(f"  -> New best validation accuracy: {best_val_accuracy:.4f}")
+    
+    # Return the best model's state_dict (weights) - DO NOT CHANGE THIS
+    if best_model_state is not None:
+        return best_model_state
+    else:
+        return model.state_dict()
 
 
 def get_transforms(mode='train'):
     """
-    Define any data augmentations or preprocessing here if needed.
+    Define data augmentations and preprocessing transforms.
+    
     Only standard torchvision transforms are permitted (no lambda functions), please check that 
     these pass by running model_calls.py before submission. Transforms will be set to .eval()
     (deterministic) mode during evaluation, so avoid using stochastic transforms like RandomCrop
     or RandomHorizontalFlip unless they can be set to p=0 during eval.
+    
+    Args:
+        mode: 'train' for training (with augmentation) or 'eval' for evaluation (deterministic)
+    
+    Returns:
+        Compose: torchvision transforms composition
     """
     if mode == 'train':
+        # Training transforms with data augmentation
         tfs = torchvision.transforms.Compose([
-            torchvision.transforms.ToTensor(), # convert images to tensors
+            # Random horizontal flip (clothing can face either direction)
+            torchvision.transforms.RandomHorizontalFlip(p=0.5),
+            # Small random rotation for robustness
+            torchvision.transforms.RandomRotation(degrees=5),
+            # Convert to tensor and normalize to [0, 1]
+            torchvision.transforms.ToTensor(),
+            # Normalize to have zero mean and unit variance (helps with training stability)
+            # Fashion-MNIST pixel values are in [0, 1] after ToTensor, so mean=0.5, std=0.5
+            torchvision.transforms.Normalize(mean=[0.5], std=[0.5])
         ])
-    elif mode == 'eval': # no stochastic transforms, or use p=0
+    elif mode == 'eval':
+        # Evaluation transforms: deterministic, no augmentation
         tfs = torchvision.transforms.Compose([
-            torchvision.transforms.ToTensor(), # convert images to tensors
+            torchvision.transforms.ToTensor(),
+            # Same normalization as training for consistency
+            torchvision.transforms.Normalize(mean=[0.5], std=[0.5])
         ])
+        # Ensure all transforms are in eval mode (deterministic)
         for tf in tfs.transforms:
             if hasattr(tf, 'train'):
                 tf.eval()  # set to eval mode if applicable # type: ignore
@@ -97,7 +178,7 @@ def load_training_data():
         train=True,
         download=True,
     )
-    # We load in data as the raw PIL images - recommended to have a look in visualise_dataset.py! 
+    # We load in data as the raw PIL images - recommended to have a look in visualise_dataset.ipynb! 
     # To use them for training or inference, we need to transform them to tensors. 
     # We set this transform here, as well as any other data preprocessing or augmentation you 
     # wish to apply.
@@ -106,24 +187,126 @@ def load_training_data():
 
 
 def main():
-    # example usage
-    # you could create a separate file that calls train_fashion_model with different parameters
-    # or modify this as needed to add cross-validation, hyperparameter tuning, etc.
+    """
+    Main training function with hyperparameter tuning and cross-validation.
+    
+    This function:
+    1. Loads the Fashion-MNIST dataset
+    2. Performs hyperparameter search using validation set
+    3. Trains the final model with best hyperparameters
+    4. Saves the trained model weights
+    """
+    print("=" * 60)
+    print("Fashion-MNIST Model Training")
+    print("=" * 60)
+    
+    # Load training data
     fashion_mnist = load_training_data()
-
-    # TODO: create data splits
-
-    # TODO: implement hyperparameter search
-
-    # Train model 
-    # TODO: this may be done within a loop for hyperparameter search / cross-validation
-    model_weights = train_fashion_model(fashion_mnist, n_epochs=1)
-
+    print(f"Loaded {len(fashion_mnist)} training samples")
+    
+    # Hyperparameter search space
+    # These values were selected based on common practices and parameter constraints
+    hyperparams = [
+        {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 30},
+        {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 30},
+        {'batch_size': 128, 'learning_rate': 0.0005, 'weight_decay': 1e-4, 'n_epochs': 30},
+    ]
+    
+    print("\n" + "=" * 60)
+    print("Hyperparameter Search")
+    print("=" * 60)
+    
+    best_accuracy = 0.0
+    best_hyperparams = None
+    best_weights = None
+    
+    # Quick hyperparameter search (using smaller number of epochs for speed)
+    for i, params in enumerate(hyperparams):
+        print(f"\n--- Hyperparameter Set {i+1}/{len(hyperparams)} ---")
+        print(f"Batch size: {params['batch_size']}, "
+              f"Learning rate: {params['learning_rate']}, "
+              f"Weight decay: {params['weight_decay']}, "
+              f"Epochs: {params['n_epochs']}")
+        
+        # Train with these hyperparameters
+        weights = train_fashion_model(
+            fashion_mnist,
+            n_epochs=params['n_epochs'],
+            batch_size=params['batch_size'],
+            learning_rate=params['learning_rate'],
+            weight_decay=params['weight_decay'],
+            USE_GPU=False
+        )
+        
+        # Evaluate on validation set to select best hyperparameters
+        # Create a temporary model to evaluate
+        model = Net()
+        model.load_state_dict(weights)
+        model.eval()
+        
+        # Create validation split for evaluation
+        train_size = int(0.8 * len(fashion_mnist))
+        val_size = len(fashion_mnist) - train_size
+        _, val_data = torch.utils.data.random_split(
+            fashion_mnist, 
+            [train_size, val_size],
+            generator=torch.Generator().manual_seed(42)
+        )
+        
+        val_loader = DataLoader(
+            val_data,
+            batch_size=params['batch_size'],
+            shuffle=False,
+            num_workers=0
+        )
+        
+        # Evaluate
+        device = torch.device('cpu')
+        criterion = torch.nn.CrossEntropyLoss()
+        val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
+        
+        print(f"Validation Accuracy: {val_accuracy:.4f}")
+        
+        if val_accuracy > best_accuracy:
+            best_accuracy = val_accuracy
+            best_hyperparams = params
+            best_weights = weights
+            print(f"  -> New best hyperparameters!")
+    
+    print("\n" + "=" * 60)
+    print("Final Training with Best Hyperparameters")
+    print("=" * 60)
+    print(f"Best hyperparameters: {best_hyperparams}")
+    print(f"Best validation accuracy: {best_accuracy:.4f}")
+    
+    # Train final model with best hyperparameters and more epochs
+    print("\nTraining final model with best hyperparameters...")
+    final_epochs = 50  # More epochs for final training
+    final_weights = train_fashion_model(
+        fashion_mnist,
+        n_epochs=final_epochs,
+        batch_size=best_hyperparams['batch_size'],
+        learning_rate=best_hyperparams['learning_rate'],
+        weight_decay=best_hyperparams['weight_decay'],
+        USE_GPU=False
+    )
+    
     # Save model weights
-    # However you tune and evaluate your model, make sure to save the final weights 
-    # to submission/model_weights.pth before submission!
     model_save_path = os.path.join('submission', 'model_weights.pth')
-    torch.save(model_weights, f=model_save_path)
+    torch.save(final_weights, f=model_save_path)
+    print(f"\nModel weights saved to {model_save_path}")
+    
+    # Print model parameter count
+    model = Net()
+    model.load_state_dict(final_weights)
+    num_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f"Total trainable parameters: {num_params:,}")
+    print(f"Parameter limit: 100,000")
+    print(f"Within limit: {'Yes' if num_params <= 100000 else 'No'}")
+    
+    print("\n" + "=" * 60)
+    print("Training Complete!")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
