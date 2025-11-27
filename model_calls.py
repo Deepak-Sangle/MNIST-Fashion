@@ -43,7 +43,7 @@ def evaluate_model(model, test_loader, device):
 
 
 def main():
-    weights_file = 'submission/weights/basic.pth'
+    weights_file = 'submission/model_weights.pth'
 
     # Check STUDENT_ID is set
     if STUDENT_ID != "14263708":

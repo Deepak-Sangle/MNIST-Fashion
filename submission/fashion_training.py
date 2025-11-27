@@ -17,11 +17,10 @@ import matplotlib.pyplot as plt
 
 from submission import engine
 from submission.fashion_model import Net
-from submission.helper import _save_kfold_plots, _save_hyperparam_config_plot
 
 # Global variable to expose the most recent best validation accuracy from train_fashion_model
 # I need to introduce this global variable because as per rules I cannot change the return value of train_fashion_model() function
-last_train_best_val_acc: float | None = None
+last_train_best_val_acc: float = 0.0
 
 def get_device(USE_GPU=True):
     if USE_GPU and torch.cuda.is_available():
@@ -34,13 +33,98 @@ def get_device(USE_GPU=True):
     return device
 
 
-def train_fashion_model(fashion_mnist, 
-                        n_epochs, 
-                        batch_size=128,
-                        learning_rate=0.001,
-                        USE_GPU=True,
-                        weight_decay=1e-4,
-                        k_folds=1):
+def train_on_each_fold(train_dataset, val_dataset, device, batch_size, learning_rate, weight_decay, n_epochs):
+    """
+    Helper to train a model on a single train/validation split for a k-fold cross-validation.
+    
+    Returns:
+        best_state_dict, best_val_accuracy
+    """
+    # Create data loaders
+    num_workers = 4 if device.type != "cpu" else 0
+    pin_memory = True if device.type != 'cpu' else False
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=pin_memory,
+    )
+
+    # Initialize model, loss function, and optimizer
+    model = Net()
+    model.to(device)
+    criterion = torch.nn.CrossEntropyLoss()
+    criterion.to(device)
+    
+    # Use Adam optimizer with weight decay for regularization
+    # New model uses SGD (vs Adam) 
+    # SGD doesn't work that well, Adam again :(
+    optimizer = torch.optim.Adam(
+        model.parameters(), 
+        lr=learning_rate,
+        weight_decay=weight_decay
+    )
+
+    # Learning rate scheduler for better convergence
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, 
+        mode='min', 
+        factor=0.5, 
+        patience=5
+    )
+
+    # Training loop
+    best_val_accuracy = 0.0
+    best_model_state = None
+    
+    for epoch in range(n_epochs):
+        epoch_start = time.time()
+
+        # Training phase
+        train_loss = engine.train(model, train_loader, criterion, optimizer, device)
+        
+        # Validation phase
+        val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
+        
+        # Update learning rate based on validation loss
+        scheduler.step(val_loss)
+
+        epoch_time = time.time() - epoch_start
+        current_lr = optimizer.param_groups[0]["lr"]
+
+        print(
+            f"Epoch [{epoch + 1}/{n_epochs}], "
+            f"Train Loss: {train_loss:.4f}, "
+            f"Val Loss: {val_loss:.4f}, "
+            f"Val Accuracy: {val_accuracy:.4f}, "
+            f"LR: {current_lr:.6f}, "
+            f"Time: {epoch_time:.2f}s"
+        )
+        
+        # Save best model based on validation accuracy
+        if val_accuracy >= best_val_accuracy:
+            best_val_accuracy = val_accuracy
+            best_model_state = model.state_dict().copy()
+            print(f"  -> New best validation accuracy: {best_val_accuracy:.4f}")
+    
+    return best_model_state, best_val_accuracy
+
+
+def train_fashion_model(fashion_mnist,
+                        n_epochs,
+                        batch_size: int = 64,
+                        learning_rate: float = 0.1,
+                        USE_GPU: bool = True,
+                        weight_decay: float = 0.0,
+                        k_folds: int = 1):
     """
     Train the Fashion-MNIST model using K-fold cross-validation.
     
@@ -64,97 +148,11 @@ def train_fashion_model(fashion_mnist,
     # Optionally use GPU if available
     device = get_device(USE_GPU)
 
-    def _train_on_split(train_dataset, val_dataset, val_acc_history=None):
-        """
-        Helper to train a model on a single train/validation split.
-        
-        Returns:
-            best_state_dict, best_val_accuracy
-        """
-        # Create data loaders
-        num_workers = 2 if device.type == "cuda" else 0
-        pin_memory = True if device.type == 'cuda' else False
-        train_loader = DataLoader(
-            train_dataset,
-            batch_size=batch_size,
-            shuffle=True,
-            num_workers=num_workers,
-            pin_memory=pin_memory,
-        )
-        val_loader = DataLoader(
-            val_dataset,
-            batch_size=batch_size,
-            shuffle=False,
-            num_workers=num_workers,
-            pin_memory=pin_memory,
-        )
-
-        # Initialize model, loss function, and optimizer
-        model = Net()
-        model.to(device)
-        criterion = torch.nn.CrossEntropyLoss()
-        criterion.to(device)
-        
-        # Use Adam optimizer with weight decay for regularization
-        optimizer = torch.optim.Adam(
-            model.parameters(), 
-            lr=learning_rate,
-            weight_decay=weight_decay
-        )
-        
-        # Learning rate scheduler for better convergence
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer, 
-            mode='min', 
-            factor=0.5, 
-            patience=5
-        )
-
-        # Training loop
-        best_val_accuracy = 0.0
-        best_model_state = None
-        
-        for epoch in range(n_epochs):
-            epoch_start = time.time()
-
-            # Training phase
-            train_loss = engine.train(model, train_loader, criterion, optimizer, device)
-            
-            # Validation phase
-            val_loss, val_accuracy = engine.eval(model, val_loader, criterion, device)
-            
-            # Update learning rate based on validation loss
-            scheduler.step(val_loss)
-
-            epoch_time = time.time() - epoch_start
-            current_lr = optimizer.param_groups[0]["lr"]
-
-            # Store epoch-wise validation accuracy history if requested (for plotting)
-            if val_acc_history is not None:
-                val_acc_history.append(float(val_accuracy))
-            
-            print(
-                f"Epoch [{epoch + 1}/{n_epochs}], "
-                f"Train Loss: {train_loss:.4f}, "
-                f"Val Loss: {val_loss:.4f}, "
-                f"Val Accuracy: {val_accuracy:.4f}, "
-                f"LR: {current_lr:.6f}, "
-                f"Time: {epoch_time:.2f}s"
-            )
-            
-            # Save best model based on validation accuracy
-            if val_accuracy > best_val_accuracy:
-                best_val_accuracy = val_accuracy
-                best_model_state = model.state_dict().copy()
-                print(f"  -> New best validation accuracy: {best_val_accuracy:.4f}")
-        
-        return best_model_state, best_val_accuracy
-
     # K-fold cross-validation (OR single train/val split if k_folds <= 1)
     num_samples = len(fashion_mnist)
     k_folds_int = int(k_folds)
 
-    # If k_folds is 1 or less, fall back to a simple train/validation split (no K-fold)
+    # If k_folds is 1 or less, use direct train/validation split (no K-fold)
     # We do this during final training
     if k_folds_int <= 1:
         train_size = int(0.8 * num_samples)
@@ -165,20 +163,16 @@ def train_fashion_model(fashion_mnist,
             generator=torch.Generator().manual_seed(42),
         )
 
-        # Track validation accuracy across epochs (fold index is fixed to 1 here)
-        val_acc_history: list[float] = []
-        best_model_state, best_val_acc = _train_on_split(
+        best_model_state, best_val_acc = train_on_each_fold(
             train_data,
             val_data,
-            val_acc_history,
+            device,
+            batch_size,
+            learning_rate,
+            weight_decay,
+            n_epochs,
         )
         last_train_best_val_acc = float(best_val_acc)
-
-        # Save a "single fold" epoch vs accuracy plot for consistency with K-fold mode
-        _save_kfold_plots(
-            fold_epoch_histories=[(1, val_acc_history)],
-            fold_accuracies=[best_val_acc],
-        )
 
         return best_model_state
 
@@ -188,8 +182,6 @@ def train_fashion_model(fashion_mnist,
 
     best_overall_accuracy = 0.0
     best_overall_state = None
-    fold_accuracies = []
-    fold_epoch_histories = []  # list of (fold_idx, [val_acc_per_epoch])
 
     for fold_idx, (train_indices, val_indices) in enumerate(kf.split(fashion_mnist), start=1):
         print(
@@ -200,12 +192,7 @@ def train_fashion_model(fashion_mnist,
         train_subset = torch.utils.data.Subset(fashion_mnist, train_indices.tolist())
         val_subset = torch.utils.data.Subset(fashion_mnist, val_indices.tolist())
 
-        # Track epoch-wise validation accuracy for this fold (for plotting)
-        val_acc_history: list[float] = []
-        fold_state, fold_best_acc = _train_on_split(train_subset, val_subset, val_acc_history)
-        fold_epoch_histories.append((fold_idx, val_acc_history))
-
-        fold_accuracies.append(fold_best_acc)
+        fold_state, fold_best_acc = train_on_each_fold(train_subset, val_subset, device, batch_size, learning_rate, weight_decay, n_epochs)
         print(f"Fold {fold_idx}/{k_folds} best validation accuracy: {fold_best_acc:.4f}")
         
         if fold_best_acc >= best_overall_accuracy:
@@ -213,12 +200,6 @@ def train_fashion_model(fashion_mnist,
             best_overall_state = fold_state
     
     last_train_best_val_acc = float(best_overall_accuracy)
-
-    # Create and save K-fold plots
-    _save_kfold_plots(
-        fold_epoch_histories=fold_epoch_histories,
-        fold_accuracies=fold_accuracies,
-    )
 
     # Return the best model's state_dict (weights) across folds
     return best_overall_state
@@ -239,9 +220,9 @@ def get_transforms(mode='train'):
             # Convert to tensor
             torchvision.transforms.ToTensor(),
             # Random horizontal flip
-            # torchvision.transforms.RandomHorizontalFlip(p=0.5),
+            torchvision.transforms.RandomHorizontalFlip(p=0.5),
             # Small random rotation for robustness
-            # torchvision.transforms.RandomRotation(degrees=5),
+            torchvision.transforms.RandomRotation(degrees=5),
             # Normalize to have zero mean and unit variance
             torchvision.transforms.Normalize(mean=[0.5], std=[0.5])
         ])
@@ -297,10 +278,9 @@ def main():
     
     # Hyperparameter search space
     hyperparams = [
-        {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 30},
-        # This one performs best with no-fold
-        {'batch_size': 256, 'learning_rate': 0.001, 'weight_decay': 1e-3, 'n_epochs': 30},
-        {'batch_size': 512, 'learning_rate': 0.005, 'weight_decay': 1e-4, 'n_epochs': 30},
+        {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 20},
+        # {'batch_size': 128, 'learning_rate': 0.1, 'weight_decay': 1e-4, 'n_epochs': 20},
+        # {'batch_size': 512, 'learning_rate': 0.005, 'weight_decay': 1e-4, 'n_epochs': 30},
     ]
     
     print("\n" + "-" * 60)
@@ -309,10 +289,8 @@ def main():
     
     best_accuracy = 0.0
     best_hyperparams = None
-    config_labels = []
-    config_val_accuracies = []
     # Number of folds for cross-validation during hyperparameter search/final training
-    k_folds = 1
+    k_folds = 5
     
     # Hyperparameter search using k-fold cross-validation
     for i, params in enumerate(hyperparams):
@@ -334,7 +312,7 @@ def main():
         )
 
         # Use the best validation accuracy recorded during K-fold training
-        val_accuracy = last_train_best_val_acc if last_train_best_val_acc is not None else 0.0
+        val_accuracy = last_train_best_val_acc
         print(f"Validation Accuracy for this hyperparameter set: {val_accuracy:.4f}")
         
         if val_accuracy >= best_accuracy:
@@ -342,20 +320,12 @@ def main():
             best_hyperparams = params
             print(f"  -> New best hyperparameters!")
 
-        # Store per-config validation accuracy for plotting
-        label = f"batch={params['batch_size']}, lr={params['learning_rate']}, decay={params['weight_decay']}, epochs={params['n_epochs']}, k_folds={k_folds}"
-        config_labels.append(label)
-        config_val_accuracies.append(float(val_accuracy))
-    
     print("\n" + "-" * 60)
     print("Best Hyperparameters Summary")
     print("-" * 60)
     print(f"Best hyperparameters: {best_hyperparams}")
     print(f"Best validation accuracy: {best_accuracy:.4f}")
 
-    # Hyperparameter config vs validation accuracy
-    _save_hyperparam_config_plot(config_labels, config_val_accuracies)
-    
     # Train final model with best hyperparameters for more epochs
     print("\nTraining final model with best hyperparameters for 50 epochs...")
     final_epochs = 50
