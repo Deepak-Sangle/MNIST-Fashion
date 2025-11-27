@@ -43,7 +43,7 @@ def evaluate_model(model, test_loader, device):
 
 
 def main():
-    weights_file = 'submission/weights/no-kfold.pth'
+    weights_file = 'submission/weights/basic.pth'
 
     # Check STUDENT_ID is set
     if STUDENT_ID != "14263708":
@@ -60,7 +60,7 @@ def main():
         return
     
     # Device configuration
-    device = get_device(True)
+    device = torch.device('cpu')
     
     # Define the model
     model = Net()

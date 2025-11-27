@@ -7,7 +7,6 @@ and execute: uv run -m submission.fashion_training
 """
 import os
 import time
-import numpy as np
 import torch
 import torchvision
 from torch.utils.data import DataLoader
@@ -18,10 +17,11 @@ import matplotlib.pyplot as plt
 
 from submission import engine
 from submission.fashion_model import Net
+from submission.helper import _save_kfold_plots, _save_hyperparam_config_plot
 
 # Global variable to expose the most recent best validation accuracy from train_fashion_model
 # I need to introduce this global variable because as per rules I cannot change the return value of train_fashion_model() function
-_LAST_TRAIN_BEST_VAL_ACC: float | None = None
+last_train_best_val_acc: float | None = None
 
 def get_device(USE_GPU=True):
     if USE_GPU and torch.cuda.is_available():
@@ -33,88 +33,6 @@ def get_device(USE_GPU=True):
     print(f"Using device: {device}")
     return device
 
-def _save_kfold_plots(
-    k_folds: int,
-    fold_epoch_histories,
-    fold_accuracies,
-    best_overall_accuracy: float,
-) -> None:
-    """
-    Helper to create and save K-fold training plots:
-    1) Validation accuracy vs epoch per fold (line plots)
-    2) Best validation accuracy per fold (bar plot with summary stats)
-    """
-    if not fold_epoch_histories and not fold_accuracies:
-        return
-
-    plots_dir = os.path.join("submission", "plots", "1")
-    os.makedirs(plots_dir, exist_ok=True)
-
-    # 1) Plot validation accuracy vs epoch for each fold
-    for fold_idx, history in fold_epoch_histories:
-        if not history:
-            continue
-        plt.figure(figsize=(6, 4))
-        epochs = range(1, len(history) + 1)
-        plt.plot(epochs, history, marker="o")
-        plt.xlabel("Epoch")
-        plt.ylabel("Validation Accuracy")
-        plt.title(f"Validation Accuracy vs Epoch (Fold {fold_idx})")
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plot_path = os.path.join(plots_dir, f"val_accuracy_fold_{fold_idx}.png")
-        plt.savefig(plot_path)
-        plt.close()
-
-    # 2) Line plot of best validation accuracy per fold
-    if fold_accuracies:
-        plt.figure(figsize=(6, 4))
-        x = np.arange(1, len(fold_accuracies) + 1)
-        plt.plot(x, fold_accuracies, marker="o")
-        plt.xlabel("Fold")
-        plt.ylabel("Best Validation Accuracy")
-        plt.title("Best Validation Accuracy per Fold")
-        plt.xticks(x)
-        plt.ylim(0.0, 1.0)
-        plt.grid(True, alpha=0.3)
-        plt.tight_layout()
-        plot_path = os.path.join(plots_dir, "best_val_accuracy_per_fold.png")
-        plt.savefig(plot_path)
-        plt.close()
-
-        mean_acc = float(np.mean(fold_accuracies))
-        std_acc = float(np.std(fold_accuracies))
-        print(
-            f"\nK-fold summary over {k_folds} folds: "
-            f"mean val accuracy = {mean_acc:.4f}, "
-            f"std = {std_acc:.4f}, "
-            f"best = {best_overall_accuracy:.4f}"
-        )
-
-
-def _save_hyperparam_config_plot(config_labels, config_val_accuracies) -> None:
-    """
-    Helper to create and save a bar plot of validation accuracy per hyperparameter configuration.
-    """
-    if not config_labels or not config_val_accuracies:
-        return
-
-    plots_dir = os.path.join("submission", "plots", "1")
-    os.makedirs(plots_dir, exist_ok=True)
-
-    plt.figure(figsize=(7, 4))
-    x = np.arange(len(config_labels))
-    plt.bar(x, config_val_accuracies)
-    plt.xticks(x, config_labels, rotation=20, ha="right")
-    plt.ylabel("Validation Accuracy")
-    plt.title("Validation Accuracy per Hyperparameter Configuration")
-    plt.ylim(0.0, 1.0)
-    plt.grid(axis="y", alpha=0.3)
-    plt.tight_layout()
-    plot_path = os.path.join(plots_dir, "val_accuracy_per_hyperparam_config.png")
-    plt.savefig(plot_path)
-    plt.close()
-
 
 def train_fashion_model(fashion_mnist, 
                         n_epochs, 
@@ -122,7 +40,7 @@ def train_fashion_model(fashion_mnist,
                         learning_rate=0.001,
                         USE_GPU=True,
                         weight_decay=1e-4,
-                        k_folds=5):
+                        k_folds=1):
     """
     Train the Fashion-MNIST model using K-fold cross-validation.
     
@@ -135,13 +53,13 @@ def train_fashion_model(fashion_mnist,
         learning_rate: Learning rate for optimizer
         USE_GPU: Whether to use GPU if available
         weight_decay: L2 regularization weight decay
-        k_folds: Number of folds for cross-validation (minimum 2)
+        k_folds: Number of folds for cross-validation (default to 1 which means no k-fold cv)
     
     Returns:
         state_dict: Model's state dictionary (weights)
     """
 
-    global _LAST_TRAIN_BEST_VAL_ACC
+    global last_train_best_val_acc
 
     # Optionally use GPU if available
     device = get_device(USE_GPU)
@@ -154,20 +72,21 @@ def train_fashion_model(fashion_mnist,
             best_state_dict, best_val_accuracy
         """
         # Create data loaders
+        num_workers = 2 if device.type == "cuda" else 0
+        pin_memory = True if device.type == 'cuda' else False
         train_loader = DataLoader(
             train_dataset,
             batch_size=batch_size,
             shuffle=True,
-            # The training takes a long time, so adding more workers
-            num_workers=2,
-            pin_memory=True if device.type == 'cuda' else False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
         )
         val_loader = DataLoader(
             val_dataset,
             batch_size=batch_size,
             shuffle=False,
-            num_workers=2,
-            pin_memory=True if device.type == 'cuda' else False,
+            num_workers=num_workers,
+            pin_memory=pin_memory,
         )
 
         # Initialize model, loss function, and optimizer
@@ -229,9 +148,6 @@ def train_fashion_model(fashion_mnist,
                 best_model_state = model.state_dict().copy()
                 print(f"  -> New best validation accuracy: {best_val_accuracy:.4f}")
         
-        # Fallback (should not normally happen)
-        if best_val_accuracy == 0.0 and best_model_state is None:
-            best_model_state = model.state_dict()
         return best_model_state, best_val_accuracy
 
     # K-fold cross-validation (OR single train/val split if k_folds <= 1)
@@ -248,8 +164,22 @@ def train_fashion_model(fashion_mnist,
             [train_size, val_size],
             generator=torch.Generator().manual_seed(42),
         )
-        best_model_state, best_val_acc = _train_on_split(train_data, val_data)
-        _LAST_TRAIN_BEST_VAL_ACC = float(best_val_acc)
+
+        # Track validation accuracy across epochs (fold index is fixed to 1 here)
+        val_acc_history: list[float] = []
+        best_model_state, best_val_acc = _train_on_split(
+            train_data,
+            val_data,
+            val_acc_history,
+        )
+        last_train_best_val_acc = float(best_val_acc)
+
+        # Save a "single fold" epoch vs accuracy plot for consistency with K-fold mode
+        _save_kfold_plots(
+            fold_epoch_histories=[(1, val_acc_history)],
+            fold_accuracies=[best_val_acc],
+        )
+
         return best_model_state
 
     # Standard K-fold cross-validation (k_folds >= 2)
@@ -282,15 +212,12 @@ def train_fashion_model(fashion_mnist,
             best_overall_accuracy = fold_best_acc
             best_overall_state = fold_state
     
-    # Record overall best validation accuracy for external use (e.g. hyperparameter search)
-    _LAST_TRAIN_BEST_VAL_ACC = float(best_overall_accuracy)
+    last_train_best_val_acc = float(best_overall_accuracy)
 
-    # Create and save K-fold plots (per-fold curves and bar chart)
+    # Create and save K-fold plots
     _save_kfold_plots(
-        k_folds=k_folds,
         fold_epoch_histories=fold_epoch_histories,
         fold_accuracies=fold_accuracies,
-        best_overall_accuracy=best_overall_accuracy,
     )
 
     # Return the best model's state_dict (weights) across folds
@@ -309,14 +236,13 @@ def get_transforms(mode='train'):
     if mode == 'train':
         # Training transforms with data augmentation
         tfs = torchvision.transforms.Compose([
-            # Convert to tensor (supports both PIL Images and NumPy arrays)
+            # Convert to tensor
             torchvision.transforms.ToTensor(),
-            # Random horizontal flip (clothing can face either direction)
-            torchvision.transforms.RandomHorizontalFlip(p=0.5),
+            # Random horizontal flip
+            # torchvision.transforms.RandomHorizontalFlip(p=0.5),
             # Small random rotation for robustness
-            torchvision.transforms.RandomRotation(degrees=5),
-            # Normalize to have zero mean and unit variance (helps with training stability)
-            # Fashion-MNIST pixel values are in [0, 1] after ToTensor, so mean=0.5, std=0.5
+            # torchvision.transforms.RandomRotation(degrees=5),
+            # Normalize to have zero mean and unit variance
             torchvision.transforms.Normalize(mean=[0.5], std=[0.5])
         ])
     elif mode == 'eval':
@@ -370,12 +296,11 @@ def main():
     print(f"Loaded {len(fashion_mnist)} training samples")
     
     # Hyperparameter search space
-    # These values were selected based on common practices and parameter constraints
     hyperparams = [
-        {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 8},
-        # This one performs best with no-fold (n_epochs was 30 that time)
-        {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 8},
-        {'batch_size': 128, 'learning_rate': 0.0005, 'weight_decay': 1e-4, 'n_epochs': 8},
+        {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 30},
+        # This one performs best with no-fold
+        {'batch_size': 256, 'learning_rate': 0.001, 'weight_decay': 1e-3, 'n_epochs': 30},
+        {'batch_size': 512, 'learning_rate': 0.005, 'weight_decay': 1e-4, 'n_epochs': 30},
     ]
     
     print("\n" + "-" * 60)
@@ -387,9 +312,9 @@ def main():
     config_labels = []
     config_val_accuracies = []
     # Number of folds for cross-validation during hyperparameter search/final training
-    k_folds = 5
+    k_folds = 1
     
-    # Quick hyperparameter search using k-fold cross-validation
+    # Hyperparameter search using k-fold cross-validation
     for i, params in enumerate(hyperparams):
         print(f"\n--- Hyperparameter Set {i+1}/{len(hyperparams)} ---")
         print(f"Batch size: {params['batch_size']}, "
@@ -409,8 +334,8 @@ def main():
         )
 
         # Use the best validation accuracy recorded during K-fold training
-        val_accuracy = _LAST_TRAIN_BEST_VAL_ACC if _LAST_TRAIN_BEST_VAL_ACC is not None else 0.0
-        print(f"K-fold best validation Accuracy: {val_accuracy:.4f}")
+        val_accuracy = last_train_best_val_acc if last_train_best_val_acc is not None else 0.0
+        print(f"Validation Accuracy for this hyperparameter set: {val_accuracy:.4f}")
         
         if val_accuracy >= best_accuracy:
             best_accuracy = float(val_accuracy)
@@ -428,7 +353,7 @@ def main():
     print(f"Best hyperparameters: {best_hyperparams}")
     print(f"Best validation accuracy: {best_accuracy:.4f}")
 
-    # 3) Bar plot: hyperparameter config vs validation accuracy
+    # Hyperparameter config vs validation accuracy
     _save_hyperparam_config_plot(config_labels, config_val_accuracies)
     
     # Train final model with best hyperparameters for more epochs

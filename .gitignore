@@ -28,3 +28,4 @@ uv.lock
 # Jupyter
 .ipynb_checkpoints/
 *.ipynb
+submission/plots/
