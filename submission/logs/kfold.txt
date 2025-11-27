@@ -1,0 +1,423 @@
+------------------------------------------------------------
+Fashion-MNIST Model Training
+------------------------------------------------------------
+Loading Fashion-MNIST dataset...
+Loaded 60000 training samples
+
+------------------------------------------------------------
+Hyperparameter Search
+------------------------------------------------------------
+
+--- Hyperparameter Set 1/2 ---
+Batch size: 64, Learning rate: 0.001, Weight decay: 0.0001, Epochs: 20
+Using device: mps
+
+Starting fold 1/5 (train=48000, val=12000)
+/Users/deepak/Documents/Manchester/COMP64501/MNIST-Fashion/.venv/lib/python3.11/site-packages/torch/utils/data/dataloader.py:692: UserWarning: 'pin_memory' argument is set as true but not supported on MPS now, device pinned memory won't be used.
+  warnings.warn(warn_msg)
+Epoch [1/20], Train Loss: 0.5970, Val Loss: 0.4528, Val Accuracy: 0.8372, LR: 0.001000, Time: 16.07s
+  -> New best validation accuracy: 0.8372
+Epoch [2/20], Train Loss: 0.4096, Val Loss: 0.3695, Val Accuracy: 0.8662, LR: 0.001000, Time: 17.21s
+  -> New best validation accuracy: 0.8662
+Epoch [3/20], Train Loss: 0.3603, Val Loss: 0.3174, Val Accuracy: 0.8854, LR: 0.001000, Time: 15.37s
+  -> New best validation accuracy: 0.8854
+Epoch [4/20], Train Loss: 0.3344, Val Loss: 0.3574, Val Accuracy: 0.8705, LR: 0.001000, Time: 15.53s
+Epoch [5/20], Train Loss: 0.3142, Val Loss: 0.3182, Val Accuracy: 0.8841, LR: 0.001000, Time: 15.73s
+Epoch [6/20], Train Loss: 0.3032, Val Loss: 0.2989, Val Accuracy: 0.8914, LR: 0.001000, Time: 15.43s
+  -> New best validation accuracy: 0.8914
+Epoch [7/20], Train Loss: 0.2872, Val Loss: 0.2686, Val Accuracy: 0.9029, LR: 0.001000, Time: 17.26s
+  -> New best validation accuracy: 0.9029
+Epoch [8/20], Train Loss: 0.2828, Val Loss: 0.2801, Val Accuracy: 0.9008, LR: 0.001000, Time: 16.20s
+Epoch [9/20], Train Loss: 0.2692, Val Loss: 0.2727, Val Accuracy: 0.9022, LR: 0.001000, Time: 16.56s
+Epoch [10/20], Train Loss: 0.2618, Val Loss: 0.2616, Val Accuracy: 0.9046, LR: 0.001000, Time: 16.13s
+  -> New best validation accuracy: 0.9046
+Epoch [11/20], Train Loss: 0.2561, Val Loss: 0.2644, Val Accuracy: 0.9047, LR: 0.001000, Time: 15.23s
+  -> New best validation accuracy: 0.9047
+Epoch [12/20], Train Loss: 0.2522, Val Loss: 0.2686, Val Accuracy: 0.8988, LR: 0.001000, Time: 15.12s
+Epoch [13/20], Train Loss: 0.2431, Val Loss: 0.2435, Val Accuracy: 0.9125, LR: 0.001000, Time: 16.41s
+  -> New best validation accuracy: 0.9125
+Epoch [14/20], Train Loss: 0.2423, Val Loss: 0.2618, Val Accuracy: 0.9040, LR: 0.001000, Time: 16.03s
+Epoch [15/20], Train Loss: 0.2359, Val Loss: 0.2489, Val Accuracy: 0.9086, LR: 0.001000, Time: 16.69s
+Epoch [16/20], Train Loss: 0.2329, Val Loss: 0.2492, Val Accuracy: 0.9093, LR: 0.001000, Time: 15.35s
+Epoch [17/20], Train Loss: 0.2285, Val Loss: 0.2518, Val Accuracy: 0.9076, LR: 0.001000, Time: 17.65s
+Epoch [18/20], Train Loss: 0.2243, Val Loss: 0.2328, Val Accuracy: 0.9164, LR: 0.001000, Time: 15.60s
+  -> New best validation accuracy: 0.9164
+Epoch [19/20], Train Loss: 0.2198, Val Loss: 0.2363, Val Accuracy: 0.9135, LR: 0.001000, Time: 16.46s
+Epoch [20/20], Train Loss: 0.2209, Val Loss: 0.2369, Val Accuracy: 0.9148, LR: 0.001000, Time: 17.07s
+Fold 1/5 best validation accuracy: 0.9164
+
+Starting fold 2/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.5993, Val Loss: 0.4597, Val Accuracy: 0.8383, LR: 0.001000, Time: 15.61s
+  -> New best validation accuracy: 0.8383
+Epoch [2/20], Train Loss: 0.4089, Val Loss: 0.3592, Val Accuracy: 0.8732, LR: 0.001000, Time: 15.33s
+  -> New best validation accuracy: 0.8732
+Epoch [3/20], Train Loss: 0.3599, Val Loss: 0.3082, Val Accuracy: 0.8927, LR: 0.001000, Time: 15.04s
+  -> New best validation accuracy: 0.8927
+Epoch [4/20], Train Loss: 0.3377, Val Loss: 0.3057, Val Accuracy: 0.8922, LR: 0.001000, Time: 15.67s
+Epoch [5/20], Train Loss: 0.3140, Val Loss: 0.2951, Val Accuracy: 0.8986, LR: 0.001000, Time: 15.75s
+  -> New best validation accuracy: 0.8986
+Epoch [6/20], Train Loss: 0.3025, Val Loss: 0.3179, Val Accuracy: 0.8840, LR: 0.001000, Time: 16.30s
+Epoch [7/20], Train Loss: 0.2897, Val Loss: 0.2804, Val Accuracy: 0.9004, LR: 0.001000, Time: 15.22s
+  -> New best validation accuracy: 0.9004
+Epoch [8/20], Train Loss: 0.2824, Val Loss: 0.2699, Val Accuracy: 0.9023, LR: 0.001000, Time: 17.19s
+  -> New best validation accuracy: 0.9023
+Epoch [9/20], Train Loss: 0.2720, Val Loss: 0.2503, Val Accuracy: 0.9121, LR: 0.001000, Time: 16.07s
+  -> New best validation accuracy: 0.9121
+Epoch [10/20], Train Loss: 0.2679, Val Loss: 0.2729, Val Accuracy: 0.9018, LR: 0.001000, Time: 16.39s
+Epoch [11/20], Train Loss: 0.2551, Val Loss: 0.2478, Val Accuracy: 0.9146, LR: 0.001000, Time: 16.65s
+  -> New best validation accuracy: 0.9146
+Epoch [12/20], Train Loss: 0.2503, Val Loss: 0.2472, Val Accuracy: 0.9102, LR: 0.001000, Time: 17.27s
+Epoch [13/20], Train Loss: 0.2476, Val Loss: 0.2445, Val Accuracy: 0.9127, LR: 0.001000, Time: 15.36s
+Epoch [14/20], Train Loss: 0.2387, Val Loss: 0.2330, Val Accuracy: 0.9177, LR: 0.001000, Time: 15.38s
+  -> New best validation accuracy: 0.9177
+Epoch [15/20], Train Loss: 0.2360, Val Loss: 0.2391, Val Accuracy: 0.9132, LR: 0.001000, Time: 17.85s
+Epoch [16/20], Train Loss: 0.2306, Val Loss: 0.2316, Val Accuracy: 0.9191, LR: 0.001000, Time: 15.76s
+  -> New best validation accuracy: 0.9191
+Epoch [17/20], Train Loss: 0.2268, Val Loss: 0.2231, Val Accuracy: 0.9188, LR: 0.001000, Time: 15.60s
+Epoch [18/20], Train Loss: 0.2256, Val Loss: 0.2535, Val Accuracy: 0.9108, LR: 0.001000, Time: 15.45s
+Epoch [19/20], Train Loss: 0.2221, Val Loss: 0.2642, Val Accuracy: 0.9024, LR: 0.001000, Time: 15.93s
+Epoch [20/20], Train Loss: 0.2188, Val Loss: 0.2292, Val Accuracy: 0.9179, LR: 0.001000, Time: 16.52s
+Fold 2/5 best validation accuracy: 0.9191
+
+Starting fold 3/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.6010, Val Loss: 0.4039, Val Accuracy: 0.8554, LR: 0.001000, Time: 18.35s
+  -> New best validation accuracy: 0.8554
+Epoch [2/20], Train Loss: 0.4115, Val Loss: 0.3528, Val Accuracy: 0.8700, LR: 0.001000, Time: 15.54s
+  -> New best validation accuracy: 0.8700
+Epoch [3/20], Train Loss: 0.3606, Val Loss: 0.3356, Val Accuracy: 0.8810, LR: 0.001000, Time: 15.46s
+  -> New best validation accuracy: 0.8810
+Epoch [4/20], Train Loss: 0.3331, Val Loss: 0.3198, Val Accuracy: 0.8824, LR: 0.001000, Time: 15.22s
+  -> New best validation accuracy: 0.8824
+Epoch [5/20], Train Loss: 0.3144, Val Loss: 0.2865, Val Accuracy: 0.8953, LR: 0.001000, Time: 15.01s
+  -> New best validation accuracy: 0.8953
+Epoch [6/20], Train Loss: 0.2971, Val Loss: 0.2987, Val Accuracy: 0.8907, LR: 0.001000, Time: 14.93s
+Epoch [7/20], Train Loss: 0.2873, Val Loss: 0.2777, Val Accuracy: 0.9010, LR: 0.001000, Time: 16.18s
+  -> New best validation accuracy: 0.9010
+Epoch [8/20], Train Loss: 0.2802, Val Loss: 0.2671, Val Accuracy: 0.9038, LR: 0.001000, Time: 16.27s
+  -> New best validation accuracy: 0.9038
+Epoch [9/20], Train Loss: 0.2687, Val Loss: 0.2743, Val Accuracy: 0.9019, LR: 0.001000, Time: 15.10s
+Epoch [10/20], Train Loss: 0.2624, Val Loss: 0.2605, Val Accuracy: 0.9059, LR: 0.001000, Time: 15.61s
+  -> New best validation accuracy: 0.9059
+Epoch [11/20], Train Loss: 0.2525, Val Loss: 0.2515, Val Accuracy: 0.9052, LR: 0.001000, Time: 15.64s
+Epoch [12/20], Train Loss: 0.2506, Val Loss: 0.2506, Val Accuracy: 0.9090, LR: 0.001000, Time: 15.67s
+  -> New best validation accuracy: 0.9090
+Epoch [13/20], Train Loss: 0.2461, Val Loss: 0.2437, Val Accuracy: 0.9109, LR: 0.001000, Time: 15.71s
+  -> New best validation accuracy: 0.9109
+Epoch [14/20], Train Loss: 0.2411, Val Loss: 0.2647, Val Accuracy: 0.9058, LR: 0.001000, Time: 16.37s
+Epoch [15/20], Train Loss: 0.2342, Val Loss: 0.2442, Val Accuracy: 0.9103, LR: 0.001000, Time: 15.53s
+Epoch [16/20], Train Loss: 0.2314, Val Loss: 0.2463, Val Accuracy: 0.9105, LR: 0.001000, Time: 15.31s
+Epoch [17/20], Train Loss: 0.2288, Val Loss: 0.2371, Val Accuracy: 0.9164, LR: 0.001000, Time: 15.20s
+  -> New best validation accuracy: 0.9164
+Epoch [18/20], Train Loss: 0.2276, Val Loss: 0.2267, Val Accuracy: 0.9177, LR: 0.001000, Time: 15.95s
+  -> New best validation accuracy: 0.9177
+Epoch [19/20], Train Loss: 0.2220, Val Loss: 0.2524, Val Accuracy: 0.9099, LR: 0.001000, Time: 15.56s
+Epoch [20/20], Train Loss: 0.2205, Val Loss: 0.2210, Val Accuracy: 0.9221, LR: 0.001000, Time: 15.71s
+  -> New best validation accuracy: 0.9221
+Fold 3/5 best validation accuracy: 0.9221
+
+Starting fold 4/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.5981, Val Loss: 0.4477, Val Accuracy: 0.8399, LR: 0.001000, Time: 15.78s
+  -> New best validation accuracy: 0.8399
+Epoch [2/20], Train Loss: 0.4088, Val Loss: 0.3892, Val Accuracy: 0.8601, LR: 0.001000, Time: 15.85s
+  -> New best validation accuracy: 0.8601
+Epoch [3/20], Train Loss: 0.3619, Val Loss: 0.3349, Val Accuracy: 0.8772, LR: 0.001000, Time: 15.99s
+  -> New best validation accuracy: 0.8772
+Epoch [4/20], Train Loss: 0.3363, Val Loss: 0.3158, Val Accuracy: 0.8889, LR: 0.001000, Time: 16.29s
+  -> New best validation accuracy: 0.8889
+Epoch [5/20], Train Loss: 0.3159, Val Loss: 0.3071, Val Accuracy: 0.8902, LR: 0.001000, Time: 16.47s
+  -> New best validation accuracy: 0.8902
+Epoch [6/20], Train Loss: 0.3005, Val Loss: 0.2725, Val Accuracy: 0.9032, LR: 0.001000, Time: 16.38s
+  -> New best validation accuracy: 0.9032
+Epoch [7/20], Train Loss: 0.2880, Val Loss: 0.2821, Val Accuracy: 0.8965, LR: 0.001000, Time: 17.48s
+Epoch [8/20], Train Loss: 0.2792, Val Loss: 0.2602, Val Accuracy: 0.9045, LR: 0.001000, Time: 15.49s
+  -> New best validation accuracy: 0.9045
+Epoch [9/20], Train Loss: 0.2711, Val Loss: 0.2652, Val Accuracy: 0.9032, LR: 0.001000, Time: 16.04s
+Epoch [10/20], Train Loss: 0.2637, Val Loss: 0.2727, Val Accuracy: 0.9005, LR: 0.001000, Time: 15.60s
+Epoch [11/20], Train Loss: 0.2569, Val Loss: 0.2635, Val Accuracy: 0.9037, LR: 0.001000, Time: 15.08s
+Epoch [12/20], Train Loss: 0.2498, Val Loss: 0.2571, Val Accuracy: 0.9078, LR: 0.001000, Time: 15.31s
+  -> New best validation accuracy: 0.9078
+Epoch [13/20], Train Loss: 0.2461, Val Loss: 0.2364, Val Accuracy: 0.9147, LR: 0.001000, Time: 16.33s
+  -> New best validation accuracy: 0.9147
+Epoch [14/20], Train Loss: 0.2398, Val Loss: 0.2600, Val Accuracy: 0.9032, LR: 0.001000, Time: 17.24s
+Epoch [15/20], Train Loss: 0.2359, Val Loss: 0.2469, Val Accuracy: 0.9096, LR: 0.001000, Time: 15.21s
+Epoch [16/20], Train Loss: 0.2325, Val Loss: 0.2638, Val Accuracy: 0.9065, LR: 0.001000, Time: 15.43s
+Epoch [17/20], Train Loss: 0.2285, Val Loss: 0.2582, Val Accuracy: 0.9058, LR: 0.001000, Time: 15.59s
+Epoch [18/20], Train Loss: 0.2279, Val Loss: 0.2585, Val Accuracy: 0.9079, LR: 0.001000, Time: 15.14s
+Epoch [19/20], Train Loss: 0.2233, Val Loss: 0.2480, Val Accuracy: 0.9096, LR: 0.000500, Time: 16.13s
+Epoch [20/20], Train Loss: 0.2020, Val Loss: 0.2147, Val Accuracy: 0.9205, LR: 0.000500, Time: 15.77s
+  -> New best validation accuracy: 0.9205
+Fold 4/5 best validation accuracy: 0.9205
+
+Starting fold 5/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.5927, Val Loss: 0.4904, Val Accuracy: 0.8149, LR: 0.001000, Time: 15.86s
+  -> New best validation accuracy: 0.8149
+Epoch [2/20], Train Loss: 0.4034, Val Loss: 0.3841, Val Accuracy: 0.8601, LR: 0.001000, Time: 16.79s
+  -> New best validation accuracy: 0.8601
+Epoch [3/20], Train Loss: 0.3535, Val Loss: 0.3597, Val Accuracy: 0.8731, LR: 0.001000, Time: 17.07s
+  -> New best validation accuracy: 0.8731
+Epoch [4/20], Train Loss: 0.3307, Val Loss: 0.3136, Val Accuracy: 0.8888, LR: 0.001000, Time: 16.40s
+  -> New best validation accuracy: 0.8888
+Epoch [5/20], Train Loss: 0.3128, Val Loss: 0.3047, Val Accuracy: 0.8886, LR: 0.001000, Time: 16.18s
+Epoch [6/20], Train Loss: 0.2966, Val Loss: 0.3113, Val Accuracy: 0.8843, LR: 0.001000, Time: 16.40s
+Epoch [7/20], Train Loss: 0.2856, Val Loss: 0.2744, Val Accuracy: 0.9011, LR: 0.001000, Time: 17.52s
+  -> New best validation accuracy: 0.9011
+Epoch [8/20], Train Loss: 0.2758, Val Loss: 0.2899, Val Accuracy: 0.8947, LR: 0.001000, Time: 18.06s
+Epoch [9/20], Train Loss: 0.2666, Val Loss: 0.2666, Val Accuracy: 0.9066, LR: 0.001000, Time: 16.08s
+  -> New best validation accuracy: 0.9066
+Epoch [10/20], Train Loss: 0.2613, Val Loss: 0.2684, Val Accuracy: 0.9042, LR: 0.001000, Time: 16.92s
+Epoch [11/20], Train Loss: 0.2575, Val Loss: 0.2931, Val Accuracy: 0.8902, LR: 0.001000, Time: 15.51s
+Epoch [12/20], Train Loss: 0.2483, Val Loss: 0.2548, Val Accuracy: 0.9102, LR: 0.001000, Time: 16.55s
+  -> New best validation accuracy: 0.9102
+Epoch [13/20], Train Loss: 0.2449, Val Loss: 0.2431, Val Accuracy: 0.9137, LR: 0.001000, Time: 15.41s
+  -> New best validation accuracy: 0.9137
+Epoch [14/20], Train Loss: 0.2394, Val Loss: 0.2434, Val Accuracy: 0.9109, LR: 0.001000, Time: 16.65s
+Epoch [15/20], Train Loss: 0.2364, Val Loss: 0.2485, Val Accuracy: 0.9106, LR: 0.001000, Time: 16.57s
+Epoch [16/20], Train Loss: 0.2297, Val Loss: 0.2371, Val Accuracy: 0.9165, LR: 0.001000, Time: 15.76s
+  -> New best validation accuracy: 0.9165
+Epoch [17/20], Train Loss: 0.2266, Val Loss: 0.2419, Val Accuracy: 0.9128, LR: 0.001000, Time: 14.99s
+Epoch [18/20], Train Loss: 0.2247, Val Loss: 0.2402, Val Accuracy: 0.9137, LR: 0.001000, Time: 16.05s
+Epoch [19/20], Train Loss: 0.2206, Val Loss: 0.2295, Val Accuracy: 0.9193, LR: 0.001000, Time: 16.66s
+  -> New best validation accuracy: 0.9193
+Epoch [20/20], Train Loss: 0.2171, Val Loss: 0.2294, Val Accuracy: 0.9177, LR: 0.001000, Time: 16.58s
+Fold 5/5 best validation accuracy: 0.9193
+Validation Accuracy for this hyperparameter set: 0.9221
+  -> New best hyperparameters!
+
+--- Hyperparameter Set 2/2 ---
+Batch size: 128, Learning rate: 0.1, Weight decay: 0.0001, Epochs: 20
+Using device: mps
+
+Starting fold 1/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.9270, Val Loss: 1.1488, Val Accuracy: 0.6397, LR: 0.100000, Time: 15.55s
+  -> New best validation accuracy: 0.6397
+Epoch [2/20], Train Loss: 0.5837, Val Loss: 0.6851, Val Accuracy: 0.7582, LR: 0.100000, Time: 15.15s
+  -> New best validation accuracy: 0.7582
+Epoch [3/20], Train Loss: 0.5703, Val Loss: 0.6825, Val Accuracy: 0.7427, LR: 0.100000, Time: 17.01s
+Epoch [4/20], Train Loss: 0.5526, Val Loss: 0.5511, Val Accuracy: 0.7954, LR: 0.100000, Time: 17.68s
+  -> New best validation accuracy: 0.7954
+Epoch [5/20], Train Loss: 0.5429, Val Loss: 1.0006, Val Accuracy: 0.6193, LR: 0.100000, Time: 15.37s
+Epoch [6/20], Train Loss: 0.5455, Val Loss: 0.6966, Val Accuracy: 0.7466, LR: 0.100000, Time: 15.85s
+Epoch [7/20], Train Loss: 0.5465, Val Loss: 0.5445, Val Accuracy: 0.8180, LR: 0.100000, Time: 15.05s
+  -> New best validation accuracy: 0.8180
+Epoch [8/20], Train Loss: 0.5361, Val Loss: 1.0226, Val Accuracy: 0.7282, LR: 0.100000, Time: 14.15s
+Epoch [9/20], Train Loss: 0.5500, Val Loss: 0.9164, Val Accuracy: 0.7021, LR: 0.100000, Time: 14.76s
+Epoch [10/20], Train Loss: 0.5452, Val Loss: 0.4811, Val Accuracy: 0.8277, LR: 0.100000, Time: 15.20s
+  -> New best validation accuracy: 0.8277
+Epoch [11/20], Train Loss: 0.5362, Val Loss: 0.6035, Val Accuracy: 0.7888, LR: 0.100000, Time: 15.68s
+Epoch [12/20], Train Loss: 0.5425, Val Loss: 0.5081, Val Accuracy: 0.8226, LR: 0.100000, Time: 14.35s
+Epoch [13/20], Train Loss: 0.5364, Val Loss: 0.5936, Val Accuracy: 0.7836, LR: 0.100000, Time: 15.05s
+Epoch [14/20], Train Loss: 0.5337, Val Loss: 0.7975, Val Accuracy: 0.7491, LR: 0.100000, Time: 15.11s
+Epoch [15/20], Train Loss: 0.5382, Val Loss: 0.8054, Val Accuracy: 0.7342, LR: 0.100000, Time: 15.23s
+Epoch [16/20], Train Loss: 0.5344, Val Loss: 0.4970, Val Accuracy: 0.8200, LR: 0.050000, Time: 15.50s
+Epoch [17/20], Train Loss: 0.4744, Val Loss: 0.7085, Val Accuracy: 0.7853, LR: 0.050000, Time: 15.80s
+Epoch [18/20], Train Loss: 0.4659, Val Loss: 0.4704, Val Accuracy: 0.8410, LR: 0.050000, Time: 15.25s
+  -> New best validation accuracy: 0.8410
+Epoch [19/20], Train Loss: 0.4645, Val Loss: 0.4155, Val Accuracy: 0.8537, LR: 0.050000, Time: 15.60s
+  -> New best validation accuracy: 0.8537
+Epoch [20/20], Train Loss: 0.4707, Val Loss: 0.4203, Val Accuracy: 0.8487, LR: 0.050000, Time: 14.87s
+Fold 1/5 best validation accuracy: 0.8537
+
+Starting fold 2/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.9031, Val Loss: 1.0734, Val Accuracy: 0.6385, LR: 0.100000, Time: 15.11s
+  -> New best validation accuracy: 0.6385
+Epoch [2/20], Train Loss: 0.5897, Val Loss: 0.5770, Val Accuracy: 0.7910, LR: 0.100000, Time: 17.21s
+  -> New best validation accuracy: 0.7910
+Epoch [3/20], Train Loss: 0.5702, Val Loss: 0.5700, Val Accuracy: 0.7996, LR: 0.100000, Time: 15.66s
+  -> New best validation accuracy: 0.7996
+Epoch [4/20], Train Loss: 0.5842, Val Loss: 1.2674, Val Accuracy: 0.6879, LR: 0.100000, Time: 17.16s
+Epoch [5/20], Train Loss: 0.5575, Val Loss: 1.3191, Val Accuracy: 0.5872, LR: 0.100000, Time: 14.79s
+Epoch [6/20], Train Loss: 0.5526, Val Loss: 2.0759, Val Accuracy: 0.5768, LR: 0.100000, Time: 16.31s
+Epoch [7/20], Train Loss: 0.5546, Val Loss: 0.6083, Val Accuracy: 0.7899, LR: 0.100000, Time: 14.83s
+Epoch [8/20], Train Loss: 0.5556, Val Loss: 0.9734, Val Accuracy: 0.6855, LR: 0.100000, Time: 16.77s
+Epoch [9/20], Train Loss: 0.5455, Val Loss: 0.8854, Val Accuracy: 0.6947, LR: 0.050000, Time: 16.60s
+Epoch [10/20], Train Loss: 0.4860, Val Loss: 0.5039, Val Accuracy: 0.8205, LR: 0.050000, Time: 17.15s
+  -> New best validation accuracy: 0.8205
+Epoch [11/20], Train Loss: 0.4864, Val Loss: 0.4534, Val Accuracy: 0.8387, LR: 0.050000, Time: 15.02s
+  -> New best validation accuracy: 0.8387
+Epoch [12/20], Train Loss: 0.4795, Val Loss: 0.4661, Val Accuracy: 0.8312, LR: 0.050000, Time: 15.80s
+Epoch [13/20], Train Loss: 0.4811, Val Loss: 0.4806, Val Accuracy: 0.8247, LR: 0.050000, Time: 15.54s
+Epoch [14/20], Train Loss: 0.4742, Val Loss: 0.4508, Val Accuracy: 0.8243, LR: 0.050000, Time: 18.88s
+Epoch [15/20], Train Loss: 0.4695, Val Loss: 0.6242, Val Accuracy: 0.7555, LR: 0.050000, Time: 16.27s
+Epoch [16/20], Train Loss: 0.4701, Val Loss: 0.5106, Val Accuracy: 0.8189, LR: 0.050000, Time: 14.83s
+Epoch [17/20], Train Loss: 0.4656, Val Loss: 0.8139, Val Accuracy: 0.7369, LR: 0.050000, Time: 21.52s
+Epoch [18/20], Train Loss: 0.4682, Val Loss: 0.5762, Val Accuracy: 0.7919, LR: 0.050000, Time: 15.32s
+Epoch [19/20], Train Loss: 0.4647, Val Loss: 0.4864, Val Accuracy: 0.8305, LR: 0.050000, Time: 21.80s
+Epoch [20/20], Train Loss: 0.4594, Val Loss: 0.4568, Val Accuracy: 0.8227, LR: 0.025000, Time: 17.52s
+Fold 2/5 best validation accuracy: 0.8387
+
+Starting fold 3/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.9717, Val Loss: 0.6346, Val Accuracy: 0.7546, LR: 0.100000, Time: 15.55s
+  -> New best validation accuracy: 0.7546
+Epoch [2/20], Train Loss: 0.6195, Val Loss: 0.6309, Val Accuracy: 0.7874, LR: 0.100000, Time: 16.49s
+  -> New best validation accuracy: 0.7874
+Epoch [3/20], Train Loss: 0.5957, Val Loss: 1.0191, Val Accuracy: 0.6550, LR: 0.100000, Time: 14.37s
+Epoch [4/20], Train Loss: 0.5890, Val Loss: 5.9199, Val Accuracy: 0.4609, LR: 0.100000, Time: 16.17s
+Epoch [5/20], Train Loss: 0.5764, Val Loss: 0.7311, Val Accuracy: 0.7429, LR: 0.100000, Time: 16.16s
+Epoch [6/20], Train Loss: 0.5865, Val Loss: 0.8951, Val Accuracy: 0.6577, LR: 0.100000, Time: 15.95s
+Epoch [7/20], Train Loss: 0.5807, Val Loss: 0.5205, Val Accuracy: 0.8139, LR: 0.100000, Time: 14.42s
+  -> New best validation accuracy: 0.8139
+Epoch [8/20], Train Loss: 0.5830, Val Loss: 0.6886, Val Accuracy: 0.7408, LR: 0.100000, Time: 16.93s
+Epoch [9/20], Train Loss: 0.5749, Val Loss: 0.6046, Val Accuracy: 0.7763, LR: 0.100000, Time: 15.07s
+Epoch [10/20], Train Loss: 0.5736, Val Loss: 0.6135, Val Accuracy: 0.7887, LR: 0.100000, Time: 14.75s
+Epoch [11/20], Train Loss: 0.5745, Val Loss: 0.5322, Val Accuracy: 0.8087, LR: 0.100000, Time: 15.08s
+Epoch [12/20], Train Loss: 0.5659, Val Loss: 1.1459, Val Accuracy: 0.6084, LR: 0.100000, Time: 15.66s
+Epoch [13/20], Train Loss: 0.5667, Val Loss: 0.7285, Val Accuracy: 0.7386, LR: 0.050000, Time: 15.35s
+Epoch [14/20], Train Loss: 0.5028, Val Loss: 0.4644, Val Accuracy: 0.8327, LR: 0.050000, Time: 15.45s
+  -> New best validation accuracy: 0.8327
+Epoch [15/20], Train Loss: 0.5013, Val Loss: 0.5031, Val Accuracy: 0.8092, LR: 0.050000, Time: 14.61s
+Epoch [16/20], Train Loss: 0.5020, Val Loss: 0.4178, Val Accuracy: 0.8492, LR: 0.050000, Time: 14.40s
+  -> New best validation accuracy: 0.8492
+Epoch [17/20], Train Loss: 0.4940, Val Loss: 0.7558, Val Accuracy: 0.7382, LR: 0.050000, Time: 15.65s
+Epoch [18/20], Train Loss: 0.4953, Val Loss: 0.4959, Val Accuracy: 0.8287, LR: 0.050000, Time: 16.79s
+Epoch [19/20], Train Loss: 0.4940, Val Loss: 6.8304, Val Accuracy: 0.3848, LR: 0.050000, Time: 16.87s
+Epoch [20/20], Train Loss: 0.4919, Val Loss: 0.4348, Val Accuracy: 0.8450, LR: 0.050000, Time: 15.39s
+Fold 3/5 best validation accuracy: 0.8492
+
+Starting fold 4/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.9399, Val Loss: 0.7748, Val Accuracy: 0.7296, LR: 0.100000, Time: 14.67s
+  -> New best validation accuracy: 0.7296
+Epoch [2/20], Train Loss: 0.5852, Val Loss: 0.7551, Val Accuracy: 0.7207, LR: 0.100000, Time: 14.79s
+Epoch [3/20], Train Loss: 0.5627, Val Loss: 0.6915, Val Accuracy: 0.7594, LR: 0.100000, Time: 18.47s
+  -> New best validation accuracy: 0.7594
+Epoch [4/20], Train Loss: 0.5476, Val Loss: 0.8472, Val Accuracy: 0.6927, LR: 0.100000, Time: 17.41s
+Epoch [5/20], Train Loss: 0.5462, Val Loss: 0.6038, Val Accuracy: 0.7978, LR: 0.100000, Time: 17.77s
+  -> New best validation accuracy: 0.7978
+Epoch [6/20], Train Loss: 0.5432, Val Loss: 0.5451, Val Accuracy: 0.8060, LR: 0.100000, Time: 16.56s
+  -> New best validation accuracy: 0.8060
+Epoch [7/20], Train Loss: 0.5337, Val Loss: 0.5136, Val Accuracy: 0.8258, LR: 0.100000, Time: 16.49s
+  -> New best validation accuracy: 0.8258
+Epoch [8/20], Train Loss: 0.5387, Val Loss: 0.5024, Val Accuracy: 0.8243, LR: 0.100000, Time: 15.84s
+Epoch [9/20], Train Loss: 0.5375, Val Loss: 0.6017, Val Accuracy: 0.7964, LR: 0.100000, Time: 15.16s
+Epoch [10/20], Train Loss: 0.5372, Val Loss: 0.4552, Val Accuracy: 0.8377, LR: 0.100000, Time: 15.15s
+  -> New best validation accuracy: 0.8377
+Epoch [11/20], Train Loss: 0.5261, Val Loss: 0.5380, Val Accuracy: 0.8052, LR: 0.100000, Time: 15.72s
+Epoch [12/20], Train Loss: 0.5343, Val Loss: 0.5896, Val Accuracy: 0.8053, LR: 0.100000, Time: 15.20s
+Epoch [13/20], Train Loss: 0.5280, Val Loss: 0.6489, Val Accuracy: 0.8149, LR: 0.100000, Time: 15.79s
+Epoch [14/20], Train Loss: 0.5261, Val Loss: 0.5287, Val Accuracy: 0.8067, LR: 0.100000, Time: 15.28s
+Epoch [15/20], Train Loss: 0.5226, Val Loss: 0.9153, Val Accuracy: 0.6987, LR: 0.100000, Time: 14.99s
+Epoch [16/20], Train Loss: 0.5214, Val Loss: 0.5622, Val Accuracy: 0.7963, LR: 0.050000, Time: 14.19s
+Epoch [17/20], Train Loss: 0.4667, Val Loss: 0.4675, Val Accuracy: 0.8309, LR: 0.050000, Time: 14.89s
+Epoch [18/20], Train Loss: 0.4604, Val Loss: 0.6224, Val Accuracy: 0.7972, LR: 0.050000, Time: 16.12s
+Epoch [19/20], Train Loss: 0.4630, Val Loss: 0.4730, Val Accuracy: 0.8273, LR: 0.050000, Time: 16.28s
+Epoch [20/20], Train Loss: 0.4561, Val Loss: 0.4352, Val Accuracy: 0.8433, LR: 0.050000, Time: 15.99s
+  -> New best validation accuracy: 0.8433
+Fold 4/5 best validation accuracy: 0.8433
+
+Starting fold 5/5 (train=48000, val=12000)
+Epoch [1/20], Train Loss: 0.8933, Val Loss: 0.6839, Val Accuracy: 0.7423, LR: 0.100000, Time: 15.25s
+  -> New best validation accuracy: 0.7423
+Epoch [2/20], Train Loss: 0.5809, Val Loss: 0.7117, Val Accuracy: 0.7597, LR: 0.100000, Time: 15.36s
+  -> New best validation accuracy: 0.7597
+Epoch [3/20], Train Loss: 0.5516, Val Loss: 0.8278, Val Accuracy: 0.7033, LR: 0.100000, Time: 15.52s
+Epoch [4/20], Train Loss: 0.5327, Val Loss: 0.8976, Val Accuracy: 0.7005, LR: 0.100000, Time: 14.64s
+Epoch [5/20], Train Loss: 0.5268, Val Loss: 0.4801, Val Accuracy: 0.8259, LR: 0.100000, Time: 15.44s
+  -> New best validation accuracy: 0.8259
+Epoch [6/20], Train Loss: 0.5232, Val Loss: 0.6095, Val Accuracy: 0.8023, LR: 0.100000, Time: 17.11s
+Epoch [7/20], Train Loss: 0.5238, Val Loss: 0.5190, Val Accuracy: 0.8159, LR: 0.100000, Time: 15.38s
+Epoch [8/20], Train Loss: 0.5186, Val Loss: 0.4653, Val Accuracy: 0.8311, LR: 0.100000, Time: 14.73s
+  -> New best validation accuracy: 0.8311
+Epoch [9/20], Train Loss: 0.5180, Val Loss: 1.1219, Val Accuracy: 0.7153, LR: 0.100000, Time: 14.53s
+Epoch [10/20], Train Loss: 0.5215, Val Loss: 0.6146, Val Accuracy: 0.7897, LR: 0.100000, Time: 15.40s
+Epoch [11/20], Train Loss: 0.5158, Val Loss: 0.5473, Val Accuracy: 0.8093, LR: 0.100000, Time: 15.51s
+Epoch [12/20], Train Loss: 0.5231, Val Loss: 1.2450, Val Accuracy: 0.5810, LR: 0.100000, Time: 15.88s
+Epoch [13/20], Train Loss: 0.5095, Val Loss: 0.7029, Val Accuracy: 0.7613, LR: 0.100000, Time: 15.41s
+Epoch [14/20], Train Loss: 0.5168, Val Loss: 0.4986, Val Accuracy: 0.8197, LR: 0.050000, Time: 16.39s
+Epoch [15/20], Train Loss: 0.4503, Val Loss: 0.4876, Val Accuracy: 0.8296, LR: 0.050000, Time: 16.72s
+Epoch [16/20], Train Loss: 0.4490, Val Loss: 0.4852, Val Accuracy: 0.8226, LR: 0.050000, Time: 15.49s
+Epoch [17/20], Train Loss: 0.4482, Val Loss: 0.4095, Val Accuracy: 0.8500, LR: 0.050000, Time: 15.67s
+  -> New best validation accuracy: 0.8500
+Epoch [18/20], Train Loss: 0.4495, Val Loss: 0.4159, Val Accuracy: 0.8506, LR: 0.050000, Time: 16.36s
+  -> New best validation accuracy: 0.8506
+Epoch [19/20], Train Loss: 0.4467, Val Loss: 1.3285, Val Accuracy: 0.6118, LR: 0.050000, Time: 15.37s
+Epoch [20/20], Train Loss: 0.4451, Val Loss: 0.9383, Val Accuracy: 0.7072, LR: 0.050000, Time: 15.21s
+Fold 5/5 best validation accuracy: 0.8506
+Validation Accuracy for this hyperparameter set: 0.8537
+
+------------------------------------------------------------
+Best Hyperparameters Summary
+------------------------------------------------------------
+Best hyperparameters: {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 0.0001, 'n_epochs': 20}
+Best validation accuracy: 0.9221
+
+Training final model with best hyperparameters for 50 epochs...
+Using device: mps
+Epoch [1/50], Train Loss: 0.5944, Val Loss: 0.5025, Val Accuracy: 0.8247, LR: 0.001000, Time: 17.20s
+  -> New best validation accuracy: 0.8247
+Epoch [2/50], Train Loss: 0.4047, Val Loss: 0.3705, Val Accuracy: 0.8663, LR: 0.001000, Time: 15.71s
+  -> New best validation accuracy: 0.8663
+Epoch [3/50], Train Loss: 0.3556, Val Loss: 0.3529, Val Accuracy: 0.8766, LR: 0.001000, Time: 16.25s
+  -> New best validation accuracy: 0.8766
+Epoch [4/50], Train Loss: 0.3307, Val Loss: 0.3061, Val Accuracy: 0.8881, LR: 0.001000, Time: 16.70s
+  -> New best validation accuracy: 0.8881
+Epoch [5/50], Train Loss: 0.3132, Val Loss: 0.3030, Val Accuracy: 0.8949, LR: 0.001000, Time: 20.11s
+  -> New best validation accuracy: 0.8949
+Epoch [6/50], Train Loss: 0.2994, Val Loss: 0.2737, Val Accuracy: 0.9011, LR: 0.001000, Time: 19.91s
+  -> New best validation accuracy: 0.9011
+Epoch [7/50], Train Loss: 0.2842, Val Loss: 0.2721, Val Accuracy: 0.9045, LR: 0.001000, Time: 15.91s
+  -> New best validation accuracy: 0.9045
+Epoch [8/50], Train Loss: 0.2800, Val Loss: 0.2686, Val Accuracy: 0.9063, LR: 0.001000, Time: 17.79s
+  -> New best validation accuracy: 0.9063
+Epoch [9/50], Train Loss: 0.2657, Val Loss: 0.2606, Val Accuracy: 0.9035, LR: 0.001000, Time: 16.38s
+Epoch [10/50], Train Loss: 0.2617, Val Loss: 0.2612, Val Accuracy: 0.9060, LR: 0.001000, Time: 16.54s
+Epoch [11/50], Train Loss: 0.2550, Val Loss: 0.2782, Val Accuracy: 0.9013, LR: 0.001000, Time: 16.40s
+Epoch [12/50], Train Loss: 0.2477, Val Loss: 0.2604, Val Accuracy: 0.9077, LR: 0.001000, Time: 17.00s
+  -> New best validation accuracy: 0.9077
+Epoch [13/50], Train Loss: 0.2446, Val Loss: 0.2502, Val Accuracy: 0.9112, LR: 0.001000, Time: 20.10s
+  -> New best validation accuracy: 0.9112
+Epoch [14/50], Train Loss: 0.2391, Val Loss: 0.2432, Val Accuracy: 0.9106, LR: 0.001000, Time: 19.72s
+Epoch [15/50], Train Loss: 0.2343, Val Loss: 0.2514, Val Accuracy: 0.9097, LR: 0.001000, Time: 22.22s
+Epoch [16/50], Train Loss: 0.2324, Val Loss: 0.2380, Val Accuracy: 0.9149, LR: 0.001000, Time: 19.82s
+  -> New best validation accuracy: 0.9149
+Epoch [17/50], Train Loss: 0.2260, Val Loss: 0.2428, Val Accuracy: 0.9119, LR: 0.001000, Time: 17.51s
+Epoch [18/50], Train Loss: 0.2247, Val Loss: 0.2487, Val Accuracy: 0.9119, LR: 0.001000, Time: 19.29s
+Epoch [19/50], Train Loss: 0.2210, Val Loss: 0.2319, Val Accuracy: 0.9193, LR: 0.001000, Time: 18.84s
+  -> New best validation accuracy: 0.9193
+Epoch [20/50], Train Loss: 0.2180, Val Loss: 0.2307, Val Accuracy: 0.9159, LR: 0.001000, Time: 18.41s
+Epoch [21/50], Train Loss: 0.2137, Val Loss: 0.2386, Val Accuracy: 0.9162, LR: 0.001000, Time: 21.67s
+Epoch [22/50], Train Loss: 0.2156, Val Loss: 0.2330, Val Accuracy: 0.9193, LR: 0.001000, Time: 18.30s
+Epoch [23/50], Train Loss: 0.2115, Val Loss: 0.2464, Val Accuracy: 0.9128, LR: 0.001000, Time: 19.28s
+Epoch [24/50], Train Loss: 0.2089, Val Loss: 0.2221, Val Accuracy: 0.9215, LR: 0.001000, Time: 20.42s
+  -> New best validation accuracy: 0.9215
+Epoch [25/50], Train Loss: 0.2063, Val Loss: 0.2284, Val Accuracy: 0.9185, LR: 0.001000, Time: 20.22s
+Epoch [26/50], Train Loss: 0.2056, Val Loss: 0.2249, Val Accuracy: 0.9199, LR: 0.001000, Time: 18.47s
+Epoch [27/50], Train Loss: 0.2002, Val Loss: 0.2175, Val Accuracy: 0.9242, LR: 0.001000, Time: 17.65s
+  -> New best validation accuracy: 0.9242
+Epoch [28/50], Train Loss: 0.2010, Val Loss: 0.2193, Val Accuracy: 0.9200, LR: 0.001000, Time: 17.63s
+Epoch [29/50], Train Loss: 0.1979, Val Loss: 0.2332, Val Accuracy: 0.9167, LR: 0.001000, Time: 18.11s
+Epoch [30/50], Train Loss: 0.1975, Val Loss: 0.2201, Val Accuracy: 0.9221, LR: 0.001000, Time: 17.50s
+Epoch [31/50], Train Loss: 0.1932, Val Loss: 0.2203, Val Accuracy: 0.9233, LR: 0.001000, Time: 18.45s
+Epoch [32/50], Train Loss: 0.1937, Val Loss: 0.2225, Val Accuracy: 0.9204, LR: 0.001000, Time: 20.04s
+Epoch [33/50], Train Loss: 0.1905, Val Loss: 0.2295, Val Accuracy: 0.9201, LR: 0.000500, Time: 18.83s
+Epoch [34/50], Train Loss: 0.1712, Val Loss: 0.2104, Val Accuracy: 0.9248, LR: 0.000500, Time: 19.64s
+  -> New best validation accuracy: 0.9248
+Epoch [35/50], Train Loss: 0.1660, Val Loss: 0.2012, Val Accuracy: 0.9274, LR: 0.000500, Time: 20.50s
+  -> New best validation accuracy: 0.9274
+Epoch [36/50], Train Loss: 0.1640, Val Loss: 0.2031, Val Accuracy: 0.9285, LR: 0.000500, Time: 18.26s
+  -> New best validation accuracy: 0.9285
+Epoch [37/50], Train Loss: 0.1606, Val Loss: 0.2014, Val Accuracy: 0.9271, LR: 0.000500, Time: 17.98s
+Epoch [38/50], Train Loss: 0.1611, Val Loss: 0.1978, Val Accuracy: 0.9292, LR: 0.000500, Time: 16.70s
+  -> New best validation accuracy: 0.9292
+Epoch [39/50], Train Loss: 0.1580, Val Loss: 0.2002, Val Accuracy: 0.9285, LR: 0.000500, Time: 17.47s
+Epoch [40/50], Train Loss: 0.1591, Val Loss: 0.2076, Val Accuracy: 0.9283, LR: 0.000500, Time: 18.29s
+Epoch [41/50], Train Loss: 0.1568, Val Loss: 0.2027, Val Accuracy: 0.9283, LR: 0.000500, Time: 18.16s
+Epoch [42/50], Train Loss: 0.1566, Val Loss: 0.2076, Val Accuracy: 0.9266, LR: 0.000500, Time: 19.45s
+Epoch [43/50], Train Loss: 0.1553, Val Loss: 0.1965, Val Accuracy: 0.9293, LR: 0.000500, Time: 21.60s
+  -> New best validation accuracy: 0.9293
+Epoch [44/50], Train Loss: 0.1537, Val Loss: 0.1981, Val Accuracy: 0.9303, LR: 0.000500, Time: 22.06s
+  -> New best validation accuracy: 0.9303
+Epoch [45/50], Train Loss: 0.1506, Val Loss: 0.2053, Val Accuracy: 0.9261, LR: 0.000500, Time: 21.09s
+Epoch [46/50], Train Loss: 0.1523, Val Loss: 0.2101, Val Accuracy: 0.9247, LR: 0.000500, Time: 20.00s
+Epoch [47/50], Train Loss: 0.1534, Val Loss: 0.1959, Val Accuracy: 0.9293, LR: 0.000500, Time: 20.33s
+Epoch [48/50], Train Loss: 0.1498, Val Loss: 0.1972, Val Accuracy: 0.9311, LR: 0.000500, Time: 20.57s
+  -> New best validation accuracy: 0.9311
+Epoch [49/50], Train Loss: 0.1494, Val Loss: 0.2029, Val Accuracy: 0.9272, LR: 0.000500, Time: 21.59s
+Epoch [50/50], Train Loss: 0.1480, Val Loss: 0.2028, Val Accuracy: 0.9293, LR: 0.000500, Time: 20.90s
+
+Model weights saved to submission/model_weights.pth
+Total trainable parameters: 94,410
+Parameter limit: 100,000
+Within limit: Yes
+
+------------------------------------------------------------
+Training Complete!
+------------------------------------------------------------

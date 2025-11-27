@@ -124,9 +124,9 @@ def save_training_curves_from_parsed(
     def _plot_metric(x, y, xlabel, ylabel, title, save_path, color=None):
         plt.figure(figsize=(6, 4))
         if color is not None:
-            plt.plot(x, y, marker="o", color=color)
+            plt.plot(x, y, color=color, linewidth=1.5)
         else:
-            plt.plot(x, y, marker="o")
+            plt.plot(x, y, linewidth=1.5)
         plt.xlabel(xlabel)
         plt.ylabel(ylabel)
         plt.title(title)
@@ -166,7 +166,14 @@ def save_training_curves_from_parsed(
 
 
 save_training_curves_from_parsed(parse_training_log("""
-  Training final model with best hyperparameters for 50 epochs...
+
+------------------------------------------------------------
+Best Hyperparameters Summary
+------------------------------------------------------------
+Best hyperparameters: {'batch_size': 128, 'learning_rate': 0.001, 'weight_decay': 0.0001, 'n_epochs': 30}
+Best validation accuracy: 0.9253
+
+Training final model with best hyperparameters for 50 epochs...
 Using device: mps
 Epoch [1/50], Train Loss: 0.6504, Val Loss: 0.4505, Val Accuracy: 0.8333, LR: 0.001000, Time: 10.22s
   -> New best validation accuracy: 0.8333
@@ -235,4 +242,13 @@ Epoch [47/50], Train Loss: 0.0667, Val Loss: 0.2131, Val Accuracy: 0.9283, LR: 0
 Epoch [48/50], Train Loss: 0.0666, Val Loss: 0.2129, Val Accuracy: 0.9280, LR: 0.000063, Time: 5.40s
 Epoch [49/50], Train Loss: 0.0656, Val Loss: 0.2126, Val Accuracy: 0.9275, LR: 0.000063, Time: 5.31s
 Epoch [50/50], Train Loss: 0.0648, Val Loss: 0.2150, Val Accuracy: 0.9268, LR: 0.000031, Time: 5.38s
-"""), "submission/plots", "best_model")
+
+Model weights saved to submission/model_weights.pth
+Total trainable parameters: 94,410
+Parameter limit: 100,000
+Within limit: Yes
+
+------------------------------------------------------------
+Training Complete!
+------------------------------------------------------------
+  """), "submission/plots", "dropout3")

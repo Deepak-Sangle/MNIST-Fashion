@@ -1,0 +1,87 @@
+------------------------------------------------------------
+Best Hyperparameters Summary
+------------------------------------------------------------
+Best hyperparameters: {'batch_size': 512, 'learning_rate': 0.005, 'weight_decay': 0.0001, 'n_epochs': 30}
+Best validation accuracy: 0.8888
+
+Training final model with best hyperparameters for 50 epochs...
+Using device: mps
+Epoch [1/50], Train Loss: 0.9549, Val Loss: 0.5930, Val Accuracy: 0.7618, LR: 0.005000, Time: 7.70s
+  -> New best validation accuracy: 0.7618
+Epoch [2/50], Train Loss: 0.6100, Val Loss: 0.4963, Val Accuracy: 0.8176, LR: 0.005000, Time: 7.77s
+  -> New best validation accuracy: 0.8176
+Epoch [3/50], Train Loss: 0.5490, Val Loss: 0.4559, Val Accuracy: 0.8308, LR: 0.005000, Time: 8.77s
+  -> New best validation accuracy: 0.8308
+Epoch [4/50], Train Loss: 0.5088, Val Loss: 0.4349, Val Accuracy: 0.8419, LR: 0.005000, Time: 7.35s
+  -> New best validation accuracy: 0.8419
+Epoch [5/50], Train Loss: 0.4864, Val Loss: 0.4054, Val Accuracy: 0.8518, LR: 0.005000, Time: 7.23s
+  -> New best validation accuracy: 0.8518
+Epoch [6/50], Train Loss: 0.4623, Val Loss: 0.3822, Val Accuracy: 0.8592, LR: 0.005000, Time: 9.19s
+  -> New best validation accuracy: 0.8592
+Epoch [7/50], Train Loss: 0.4509, Val Loss: 0.3837, Val Accuracy: 0.8567, LR: 0.005000, Time: 7.40s
+Epoch [8/50], Train Loss: 0.4435, Val Loss: 0.3625, Val Accuracy: 0.8652, LR: 0.005000, Time: 7.19s
+  -> New best validation accuracy: 0.8652
+Epoch [9/50], Train Loss: 0.4268, Val Loss: 0.3552, Val Accuracy: 0.8678, LR: 0.005000, Time: 7.22s
+  -> New best validation accuracy: 0.8678
+Epoch [10/50], Train Loss: 0.4140, Val Loss: 0.3559, Val Accuracy: 0.8708, LR: 0.005000, Time: 7.18s
+  -> New best validation accuracy: 0.8708
+Epoch [11/50], Train Loss: 0.4160, Val Loss: 0.3456, Val Accuracy: 0.8711, LR: 0.005000, Time: 7.52s
+  -> New best validation accuracy: 0.8711
+Epoch [12/50], Train Loss: 0.4069, Val Loss: 0.3390, Val Accuracy: 0.8743, LR: 0.005000, Time: 7.83s
+  -> New best validation accuracy: 0.8743
+Epoch [13/50], Train Loss: 0.4042, Val Loss: 0.3426, Val Accuracy: 0.8734, LR: 0.005000, Time: 8.39s
+Epoch [14/50], Train Loss: 0.3998, Val Loss: 0.3427, Val Accuracy: 0.8712, LR: 0.005000, Time: 8.34s
+Epoch [15/50], Train Loss: 0.3930, Val Loss: 0.3205, Val Accuracy: 0.8817, LR: 0.005000, Time: 7.73s
+  -> New best validation accuracy: 0.8817
+Epoch [16/50], Train Loss: 0.3933, Val Loss: 0.3297, Val Accuracy: 0.8781, LR: 0.005000, Time: 7.11s
+Epoch [17/50], Train Loss: 0.3869, Val Loss: 0.3280, Val Accuracy: 0.8794, LR: 0.005000, Time: 7.50s
+Epoch [18/50], Train Loss: 0.3884, Val Loss: 0.3213, Val Accuracy: 0.8810, LR: 0.005000, Time: 7.60s
+Epoch [19/50], Train Loss: 0.3818, Val Loss: 0.3268, Val Accuracy: 0.8786, LR: 0.005000, Time: 8.57s
+Epoch [20/50], Train Loss: 0.3841, Val Loss: 0.3219, Val Accuracy: 0.8829, LR: 0.005000, Time: 7.24s
+  -> New best validation accuracy: 0.8829
+Epoch [21/50], Train Loss: 0.3794, Val Loss: 0.3171, Val Accuracy: 0.8839, LR: 0.005000, Time: 7.51s
+  -> New best validation accuracy: 0.8839
+Epoch [22/50], Train Loss: 0.3743, Val Loss: 0.3191, Val Accuracy: 0.8814, LR: 0.005000, Time: 7.22s
+Epoch [23/50], Train Loss: 0.3818, Val Loss: 0.3169, Val Accuracy: 0.8859, LR: 0.005000, Time: 7.20s
+  -> New best validation accuracy: 0.8859
+Epoch [24/50], Train Loss: 0.3789, Val Loss: 0.3262, Val Accuracy: 0.8804, LR: 0.005000, Time: 7.68s
+Epoch [25/50], Train Loss: 0.3760, Val Loss: 0.3160, Val Accuracy: 0.8822, LR: 0.005000, Time: 8.80s
+Epoch [26/50], Train Loss: 0.3724, Val Loss: 0.3147, Val Accuracy: 0.8847, LR: 0.005000, Time: 7.79s
+Epoch [27/50], Train Loss: 0.3687, Val Loss: 0.3136, Val Accuracy: 0.8844, LR: 0.005000, Time: 9.19s
+Epoch [28/50], Train Loss: 0.3712, Val Loss: 0.3276, Val Accuracy: 0.8770, LR: 0.005000, Time: 9.08s
+Epoch [29/50], Train Loss: 0.3665, Val Loss: 0.3140, Val Accuracy: 0.8833, LR: 0.005000, Time: 8.33s
+Epoch [30/50], Train Loss: 0.3684, Val Loss: 0.3036, Val Accuracy: 0.8864, LR: 0.005000, Time: 8.53s
+  -> New best validation accuracy: 0.8864
+Epoch [31/50], Train Loss: 0.3663, Val Loss: 0.3110, Val Accuracy: 0.8856, LR: 0.005000, Time: 7.42s
+Epoch [32/50], Train Loss: 0.3663, Val Loss: 0.3120, Val Accuracy: 0.8844, LR: 0.005000, Time: 7.42s
+Epoch [33/50], Train Loss: 0.3685, Val Loss: 0.3049, Val Accuracy: 0.8879, LR: 0.005000, Time: 7.50s
+  -> New best validation accuracy: 0.8879
+Epoch [34/50], Train Loss: 0.3661, Val Loss: 0.3134, Val Accuracy: 0.8844, LR: 0.005000, Time: 8.19s
+Epoch [35/50], Train Loss: 0.3651, Val Loss: 0.3251, Val Accuracy: 0.8807, LR: 0.005000, Time: 7.64s
+Epoch [36/50], Train Loss: 0.3677, Val Loss: 0.3112, Val Accuracy: 0.8868, LR: 0.002500, Time: 7.57s
+Epoch [37/50], Train Loss: 0.3503, Val Loss: 0.2980, Val Accuracy: 0.8898, LR: 0.002500, Time: 7.42s
+  -> New best validation accuracy: 0.8898
+Epoch [38/50], Train Loss: 0.3442, Val Loss: 0.2888, Val Accuracy: 0.8936, LR: 0.002500, Time: 7.35s
+  -> New best validation accuracy: 0.8936
+Epoch [39/50], Train Loss: 0.3418, Val Loss: 0.2896, Val Accuracy: 0.8935, LR: 0.002500, Time: 7.57s
+Epoch [40/50], Train Loss: 0.3429, Val Loss: 0.2969, Val Accuracy: 0.8888, LR: 0.002500, Time: 7.49s
+Epoch [41/50], Train Loss: 0.3386, Val Loss: 0.2891, Val Accuracy: 0.8923, LR: 0.002500, Time: 7.66s
+Epoch [42/50], Train Loss: 0.3362, Val Loss: 0.2888, Val Accuracy: 0.8936, LR: 0.002500, Time: 9.03s
+Epoch [43/50], Train Loss: 0.3343, Val Loss: 0.2929, Val Accuracy: 0.8922, LR: 0.002500, Time: 8.60s
+Epoch [44/50], Train Loss: 0.3426, Val Loss: 0.2939, Val Accuracy: 0.8915, LR: 0.002500, Time: 8.32s
+Epoch [45/50], Train Loss: 0.3364, Val Loss: 0.2931, Val Accuracy: 0.8924, LR: 0.002500, Time: 7.62s
+Epoch [46/50], Train Loss: 0.3355, Val Loss: 0.2916, Val Accuracy: 0.8918, LR: 0.002500, Time: 7.52s
+Epoch [47/50], Train Loss: 0.3360, Val Loss: 0.2934, Val Accuracy: 0.8912, LR: 0.002500, Time: 7.75s
+Epoch [48/50], Train Loss: 0.3348, Val Loss: 0.2889, Val Accuracy: 0.8923, LR: 0.001250, Time: 7.42s
+Epoch [49/50], Train Loss: 0.3287, Val Loss: 0.2862, Val Accuracy: 0.8933, LR: 0.001250, Time: 8.15s
+Epoch [50/50], Train Loss: 0.3272, Val Loss: 0.2834, Val Accuracy: 0.8938, LR: 0.001250, Time: 7.55s
+  -> New best validation accuracy: 0.8938
+
+Model weights saved to submission/model_weights.pth
+Total trainable parameters: 44,426
+Parameter limit: 100,000
+Within limit: Yes
+
+------------------------------------------------------------
+Training Complete!
+------------------------------------------------------------

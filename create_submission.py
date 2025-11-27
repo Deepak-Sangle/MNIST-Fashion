@@ -21,7 +21,7 @@ except ImportError:
     exit(1)
 
 # Verify student ID is set
-if STUDENT_ID == "14263708":
+if STUDENT_ID != "14263708":
     print("ERROR: STUDENT_ID not set!")
     print("Please edit submission/STUDENT_ID.py to set your student ID.")
     exit(1)
@@ -36,6 +36,8 @@ REQUIRED_FILES = [
     "model_calls.py", # not required in final submission, but necessary if you wish to test locally
     "utils.py", # not required in final submission, but necessary if you wish to test locally
     "Dockerfile",
+    "models.py",
+    "helper.py",
     "pyproject.toml",
 ]
 

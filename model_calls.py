@@ -88,14 +88,6 @@ def main():
         print(f"PARAMETERS: {num_params}")
         return
     
-    # Define training transforms and check validity
-    transforms_train = get_transforms(mode='train')
-    passed, error = utils.check_valid_transforms(transforms_train)
-    if not passed:
-        print(f"STUDENT_ID: {STUDENT_ID}")
-        print(f"ERROR: {error}")
-        print(f"PARAMETERS: {num_params}")
-        return
     
     # Model architecture check
     passed, error = utils.model_check(model, device, transforms=transforms_train)

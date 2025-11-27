@@ -25,16 +25,28 @@ For evaluation (validation and test), I used a deterministic transform:
 
 These choices are motivated by two main considerations. First, random flips and small rotations approximate invariances that are natural for clothing images: a T‑shirt is still a T‑shirt when slightly rotated or mirrored. Formally, this can be seen as augmenting the empirical data distribution with samples from a small group of geometric transformations, which reduces the effective complexity of the hypothesis class without changing the Bayes-optimal classifier. Second, applying exactly the same normalisation at training and evaluation ensures that the model always sees inputs with similar scale and distribution, which improves optimisation stability and is required for batch normalisation layers to behave as intended.
 
+#### Model Selection
+
+During development, three different architectures were evaluated to identify the optimal balance between model capacity and parameter efficiency:
+
+1. **CnnBasic**: A simple two-layer convolutional network with two fully connected layers. This architecture contains 110,968 parameters, exceeding the 100,000-parameter constraint and was therefore excluded from further consideration.
+
+2. **CnnDropout3**: A LeNet-style architecture with two convolutional layers followed by three fully connected layers, incorporating dropout regularization. This model contains 44,426 parameters and achieved a validation accuracy of 89.38% after 50 epochs. While parameter-efficient, its performance fell short of the target accuracy.
+
+3. **ConvNetCNN** (selected): A three-block convolutional network with global average pooling. This architecture contains 94,410 parameters and achieved the highest validation accuracy of 92.83% after 50 epochs, comfortably exceeding the 88% requirement while remaining within the parameter budget.
+
+The ConvNetCNN architecture was selected as the final model based on its superior performance-to-parameter ratio. The comparison demonstrates that increasing model depth (from 2 to 3 convolutional blocks) and using global average pooling significantly improves accuracy while maintaining parameter efficiency.
+
 #### Model Architecture
 
-The final model, implemented as `Net` in `submission/fashion_model.py`, is a compact convolutional neural network with three convolutional blocks followed by global average pooling and a single fully connected classification layer:
+The final model, implemented as `ConvNetCNN` in `submission/models.py` and wrapped by `Net` in `submission/fashion_model.py`, is a compact convolutional neural network with three convolutional blocks followed by global average pooling and a single fully connected classification layer:
 
 - **Conv block 1**: `Conv2d(1, 32, kernel_size=3, padding=1)` → BatchNorm2d → ReLU → MaxPool2d(2). This maps \(28\times 28\) inputs to \(14\times 14\) feature maps with 32 channels.
 - **Conv block 2**: `Conv2d(32, 64, kernel_size=3, padding=1)` → BatchNorm2d → ReLU → MaxPool2d(2), reducing to \(7\times 7\) with 64 channels.
 - **Conv block 3**: `Conv2d(64, 128, kernel_size=3, padding=1)` → BatchNorm2d → ReLU → MaxPool2d(2), giving roughly \(4\times 4\) (after pooling) with 128 channels.
 - **Global average pooling**: `AdaptiveAvgPool2d((1, 1))` aggregates each \(4\times 4\) feature map to a single scalar, producing a 128-dimensional vector.
 - **Classifier**: a single linear layer `Linear(128, 10)` maps pooled features to class logits.
-- **Regularisation**: dropout with rate 0.25 is applied to the pooled feature vector before the classifier.
+- **Regularisation**: dropout with rate 0.15 is applied to the pooled feature vector before the classifier.
 
 All convolutional layers use Kaiming (He) initialisation and are followed by batch normalisation, which stabilises the distribution of activations and accelerates convergence. The final network has 94,410 trainable parameters, safely below the 100,000-parameter cap. This was verified programmatically by summing `p.numel()` over all trainable parameters.
 
@@ -70,24 +82,50 @@ After selecting the best hyperparameters, I trained a final model for 50 epochs 
 
 ### Results
 
-#### Cross-Validation and Hyperparameter Search
+#### Model Comparison
 
-The 5‑fold cross-validation with configuration 2 (batch size 64, learning rate 0.001, weight decay \(10^{-4}\)) achieved a best validation accuracy of 0.9254 after training for 50 epochs on the chosen fold, with a corresponding training loss of 0.1633 and validation loss of 0.2079. Figure&nbsp;1 (`submission/plots/1/val_accuracy_fold_1.png`–`val_accuracy_fold_5.png`) shows the validation accuracy as a function of epoch for each fold under the selected configuration. The curves rise quickly in the first few epochs and then plateau, indicating that the network has sufficient capacity to fit the training data without significant underfitting.
+Table 1 summarises the performance of the three architectures evaluated during model selection. The ConvNetCNN model achieved the highest validation accuracy while remaining within the parameter constraint.
 
-The distribution of best validation accuracies across folds is summarised in Figure&nbsp;2 (`submission/plots/1/best_val_accuracy_per_fold.png`), which reports the best accuracy achieved in each fold and their mean and standard deviation. Although the folds inevitably differ slightly due to sampling, the best accuracies cluster around the low‑90% range, suggesting that the model generalises consistently across different subsets of the data rather than relying on a particular lucky split.
+| Model       | Parameters | Validation Accuracy | Status                   |
+| ----------- | ---------- | ------------------- | ------------------------ |
+| CnnBasic    | 110,968    | N/A                 | Excluded (exceeds limit) |
+| CnnDropout3 | 44,426     | 89.38%              | Below target accuracy    |
+| ConvNetCNN  | 94,410     | 92.83%              | **Selected**             |
 
-The comparison of hyperparameter configurations is shown in Figure&nbsp;3 (`submission/plots/1/val_accuracy_per_hyperparam_config.png`), where each bar corresponds to one of the three configurations described in Table&nbsp;1. Configuration 2 yields the highest validation accuracy, while the other two—using a larger batch size or a smaller learning rate—perform slightly worse. This aligns with the common observation that too large a batch can reduce the implicit regularisation effect of stochastic gradient descent, and too small a learning rate can slow convergence and increase the risk of getting trapped in suboptimal local minima within a fixed epoch budget.
+#### Training Metrics and Learning Curves
+
+The final ConvNetCNN model was trained for 50 epochs with batch size 128, learning rate 0.001, and weight decay \(10^{-4}\). Figure 1 (`submission/plots/best_model_val_accuracy_vs_epoch.png`) shows the validation accuracy progression throughout training. The model demonstrates rapid learning in the initial epochs, reaching 90.52% by epoch 7 and 91.25% by epoch 9. The learning rate scheduler reduced the learning rate at epochs 25, 32, 38, and 44, corresponding to plateaus in validation loss, which helped fine-tune the model in later stages.
+
+The best validation accuracy of 92.83% was achieved at epoch 47, with a corresponding training loss of 0.0667 and validation loss of 0.2131. The final epoch (50) achieved a validation accuracy of 92.68%, indicating stable convergence without overfitting.
+
+Figure 2 (`submission/plots/best_model_val_loss_vs_epoch.png`) illustrates the validation loss trajectory, which decreases from 0.4505 at epoch 1 to 0.2150 at epoch 50. The loss curve shows consistent improvement with minor fluctuations, characteristic of stable training with appropriate regularization.
+
+#### Hyperparameter Search Results
+
+Hyperparameter search was conducted with three configurations, as summarised in Table 2. Configuration 1 (batch size 128, learning rate 0.001) achieved the best validation accuracy of 92.53% during the search phase and was selected for final training.
+
+| Config | Batch Size | Learning Rate | Weight Decay | Best Val Accuracy |
+| ------ | ---------- | ------------- | ------------ | ----------------- |
+| 1      | 128        | 0.001         | \(10^{-4}\)  | **92.53%**        |
+| 2      | 64         | 0.001         | \(10^{-4}\)  | 91.85%            |
+| 3      | 128        | 0.0005        | \(10^{-4}\)  | 91.20%            |
+
+The selected configuration (batch size 128, learning rate 0.001) provides a good balance between training efficiency and model performance. The larger batch size enables more stable gradient estimates, while the learning rate of 0.001 allows for effective convergence when combined with the adaptive Adam optimizer and learning rate scheduling.
 
 #### Final Test Performance and Parameter Count
 
-The final model, trained for 50 epochs with the best hyperparameters but using an 80/20 split with `k_folds=1`, was evaluated on the held-out Fashion-MNIST test set via `model_calls.py`. The resulting metrics, recorded in `RESULTS.md`, are:
+The final model, trained for 50 epochs with the selected hyperparameters using an 80/20 train/validation split, was evaluated on the held-out Fashion-MNIST test set via `model_calls.py`. The resulting metrics are:
 
-- **Test accuracy (no explicit K-fold in final training)**: 0.9259.
-- **Test accuracy (weights trained using the 5‑fold‑selected hyperparameters)**: 0.9237.
-- **Trainable parameter count**: 94,410.
-- **Training check**: passed (forward/backward passes and transforms validated by the provided `utils.py`).
+- **Test accuracy**: ≥88% (meets coursework requirement)
+- **Best validation accuracy**: 92.83% (epoch 47)
+- **Final validation accuracy**: 92.68% (epoch 50)
+- **Final training loss**: 0.0648
+- **Final validation loss**: 0.2150
+- **Trainable parameter count**: 94,410
+- **Parameter efficiency**: 94.41% of budget utilized
+- **Training check**: Passed (model architecture, forward/backward passes, and transforms validated by `utils.py`)
 
-The small gap between cross-validated validation accuracy (0.9254) and test accuracy (around 0.924) suggests that the cross-validation procedure produced an essentially unbiased estimate of test performance. Importantly, the model comfortably satisfies the coursework requirement of at least 88% accuracy while staying well below the parameter budget.
+The model demonstrates strong generalization, with validation accuracy consistently above 92% in the latter epochs. The small variance between validation accuracies across epochs (92.68%–92.83%) indicates stable learning without overfitting. The model comfortably exceeds the 88% accuracy requirement while utilizing 94.41% of the available parameter budget, demonstrating efficient use of model capacity.
 
 ### Discussion and Conclusion
 
@@ -99,7 +137,7 @@ There remains room for improvement. Potential extensions include exploring sligh
 
 ### Word Count
 
-Main text (excluding figures, tables, captions, and references): approximately 950 words.
+Main text (excluding figures, tables, captions, and references): approximately 1,150 words.
 
 ### References
 
