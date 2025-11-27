@@ -279,7 +279,7 @@ def main():
     # Hyperparameter search space
     hyperparams = [
         {'batch_size': 64, 'learning_rate': 0.001, 'weight_decay': 1e-4, 'n_epochs': 20},
-        # {'batch_size': 128, 'learning_rate': 0.1, 'weight_decay': 1e-4, 'n_epochs': 20},
+        {'batch_size': 128, 'learning_rate': 0.1, 'weight_decay': 1e-4, 'n_epochs': 20},
         # {'batch_size': 512, 'learning_rate': 0.005, 'weight_decay': 1e-4, 'n_epochs': 30},
     ]
     
